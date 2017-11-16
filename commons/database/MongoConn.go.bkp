@@ -97,9 +97,9 @@ func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup) {
 	defer sessionCopy.Close()
 
 	// Get a collection to execute the query against.
-	collection := sessionCopy.DB(TestDatabase).C("ipPorts")
+	collection := sessionCopy.DB(TestDatabase).C("ipPort")
 
-	//fmt.Printf("RunQuery : %d : Executing\n")
+	fmt.Printf("RunQuery : %d : Executing\n")
 
 	// Retrieve the list of stations.
 	var deliveries []models.Delivery
@@ -109,6 +109,5 @@ func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup) {
 		return
 	}
 
-	//fmt.Printf("RunQuery : %d : Count[%d]\n", len(deliveries))
-	fmt.Println("Count: ", len(deliveries))
+	fmt.Printf("RunQuery : %d : Count[%d]\n", len(deliveries))
 }

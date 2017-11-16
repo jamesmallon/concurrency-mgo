@@ -3,39 +3,12 @@
 package database
 
 import (
-	"fmt"
 	"gopkg.in/mgo.v2"
-	//"gopkg.in/mgo.v2/bson"
-	//"reflect"
+	"gopkg.in/mgo.v2/bson"
+	"log"
 	"sync"
 	"time"
-	"userv/modules/delivery/models"
 )
-
-/**
- * This file implements the singleton pattern to avoid the sistem to deal with more
- * than one Mongodb connection at once.
- */
-
-var mgoSession *mgo.Session
-
-/**
- *
- */
-type mongoSession struct {
-	session    *mgo.Session
-	database   *mgo.Database
-	collection *mgo.Collection
-}
-
-/**
- * @method mgoSessione.Clone() GetmongoSession It create and instantiate a Mongodb connection
- * @return mgoSessione.Clone()
- */
-func ConnMongo() *mongoSession {
-	db := &mongoSession{}
-	return db.connectSingleton()
-}
 
 const (
 	MongoDBHosts = "localhost:27307"
@@ -45,10 +18,17 @@ const (
 	TestDatabase = "delivery"
 )
 
-// main is the entry point for the application.
-func (db *mongoSession) connectSingleton() *mongoSession {
+type (
+	// Delivery contains information for an individual station.
+	Delivery struct {
+		Id       bson.ObjectId `bson:"_id,omitempty"`
+		IpPort   string        `bson:"ipPort"`
+		Protocol string        `bson:"protocol"`
+	}
+)
 
-	//if mgoSession == nil {
+// main is the entry point for the application.
+func conn() {
 	// We need this object to establish a session to our MongoDB.
 	mongoDBDialInfo := &mgo.DialInfo{
 		Addrs:    []string{MongoDBHosts},
@@ -60,11 +40,9 @@ func (db *mongoSession) connectSingleton() *mongoSession {
 
 	// Create a session which maintains a pool of socket connections
 	// to our MongoDB.
-	mgoSession, err := mgo.DialWithInfo(mongoDBDialInfo)
+	mongoSession, err := mgo.DialWithInfo(mongoDBDialInfo)
 	if err != nil {
-		fmt.Println("CreateSession: %s\n", err)
-	} else {
-		fmt.Println("Session Created")
+		log.Fatalf("CreateSession: %s\n", err)
 	}
 
 	// Reads may not be entirely up-to-date, but they will always see the
@@ -72,19 +50,25 @@ func (db *mongoSession) connectSingleton() *mongoSession {
 	// across sequential queries in the same session, and modifications made
 	// within the session will be observed in following queries (read-your-writes).
 	// http://godoc.org/labix.org/v2/mgo#Session.SetMode
-	mgoSession.SetMode(mgo.Monotonic, true)
-	//}
-	db.session = mgoSession
-	//fmt.Println(reflect.TypeOf(db.Sess))
-	//db.UseDB(DATABASE) // it must to be charged be the app context, that is charged by a config file
+	mongoSession.SetMode(mgo.Monotonic, true)
 
-	return db
+	// Create a wait group to manage the goroutines.
+	var waitGroup sync.WaitGroup
+
+	// Perform 10 concurrent queries against the database.
+	waitGroup.Add(10)
+	for query := 0; query < 10; query++ {
+		go RunQuery(query, &waitGroup, mongoSession)
+	}
+
+	// Wait for all the queries to complete.
+	waitGroup.Wait()
+	log.Println("All Queries Completed")
 }
 
 // RunQuery is a function that is launched as a goroutine to perform
 // the MongoDB work.
-//func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup, mongoSession *mgo.Session) {
-func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup) {
+func RunQuery(query int, waitGroup *sync.WaitGroup, mongoSession *mgo.Session) {
 	// Decrement the wait group count so the program knows this
 	// has been completed once the goroutine exits.
 	defer waitGroup.Done()
@@ -92,23 +76,21 @@ func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup) {
 	// Request a socket connection from the session to process our query.
 	// Close the session when the goroutine exits and put the connection back
 	// into the pool.
-	sessionCopy := db.session.Copy()
-	//sessionCopy := db.Session.Copy()
+	sessionCopy := mongoSession.Copy()
 	defer sessionCopy.Close()
 
 	// Get a collection to execute the query against.
-	collection := sessionCopy.DB(TestDatabase).C("ipPorts")
+	collection := sessionCopy.DB(TestDatabase).C("buoy_stations")
 
-	//fmt.Printf("RunQuery : %d : Executing\n")
+	log.Printf("RunQuery : %d : Executing\n", query)
 
 	// Retrieve the list of stations.
-	var deliveries []models.Delivery
+	var deliveries []Delivery
 	err := collection.Find(nil).All(&deliveries)
 	if err != nil {
-		fmt.Printf("RunQuery : ERROR : %s\n", err)
+		log.Printf("RunQuery : ERROR : %s\n", err)
 		return
 	}
 
-	//fmt.Printf("RunQuery : %d : Count[%d]\n", len(deliveries))
-	fmt.Println("Count: ", len(deliveries))
+	log.Printf("RunQuery : %d : Count[%d]\n", query, len(deliveries))
 }
