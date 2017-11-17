@@ -12,3 +12,9 @@
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
+
+# vim sw files
+*.sw*
+
+# dep's vendor folder
+vendor/

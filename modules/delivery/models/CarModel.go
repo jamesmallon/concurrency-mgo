@@ -11,3 +11,4 @@ type (
 		Protocol string        `bson:"protocol"`
 	}
 )
+package models

@@ -17,6 +17,8 @@ import (
  * than one Mongodb connection at once.
  */
 
+var mgoSession *mgo.Session
+
 /**
  *
  */
@@ -27,8 +29,8 @@ type mongoSession struct {
 }
 
 /**
- * @method db.sessione.Clone() GetmongoSession It create and instantiate a Mongodb connection
- * @return db.sessione.Clone()
+ * @method mgoSessione.Clone() GetmongoSession It create and instantiate a Mongodb connection
+ * @return mgoSessione.Clone()
  */
 func ConnMongo() *mongoSession {
 	db := &mongoSession{}
@@ -46,34 +48,35 @@ const (
 // main is the entry point for the application.
 func (db *mongoSession) connectSingleton() *mongoSession {
 
-	if db.session == nil {
-		// We need this object to establish a session to our MongoDB.
-		mongoDBDialInfo := &mgo.DialInfo{
-			Addrs:    []string{MongoDBHosts},
-			Timeout:  60 * time.Second,
-			Database: AuthDatabase,
-			Username: AuthUserName,
-			Password: AuthPassword,
-		}
-
-		// Create a session which maintains a pool of socket connections
-		// to our MongoDB.
-		var err error
-		db.session, err = mgo.DialWithInfo(mongoDBDialInfo)
-		if err != nil {
-			fmt.Println("CreateSession: %s\n", err)
-		} else {
-			fmt.Println("Session Created")
-		}
-
-		// Reads may not be entirely up-to-date, but they will always see the
-		// history of changes moving forward, the data read will be consistent
-		// across sequential queries in the same session, and modifications made
-		// within the session will be observed in following queries (read-your-writes).
-		// http://godoc.org/labix.org/v2/mgo#Session.SetMode
-		db.session.SetMode(mgo.Monotonic, true)
+	//if mgoSession == nil {
+	// We need this object to establish a session to our MongoDB.
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{MongoDBHosts},
+		Timeout:  60 * time.Second,
+		Database: AuthDatabase,
+		Username: AuthUserName,
+		Password: AuthPassword,
 	}
-	//db.session = db.session
+
+	// Create a session which maintains a pool of socket connections
+	// to our MongoDB.
+	mgoSession, err := mgo.DialWithInfo(mongoDBDialInfo)
+	if err != nil {
+		fmt.Println("CreateSession: %s\n", err)
+	} else {
+		fmt.Println("Session Created")
+	}
+
+	// Reads may not be entirely up-to-date, but they will always see the
+	// history of changes moving forward, the data read will be consistent
+	// across sequential queries in the same session, and modifications made
+	// within the session will be observed in following queries (read-your-writes).
+	// http://godoc.org/labix.org/v2/mgo#Session.SetMode
+	mgoSession.SetMode(mgo.Monotonic, true)
+	//}
+	db.session = mgoSession
+	//fmt.Println(reflect.TypeOf(db.Sess))
+	//db.UseDB(DATABASE) // it must to be charged be the app context, that is charged by a config file
 
 	return db
 }
@@ -94,9 +97,9 @@ func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup) {
 	defer sessionCopy.Close()
 
 	// Get a collection to execute the query against.
-	collection := sessionCopy.DB(TestDatabase).C("ipPorts")
+	collection := sessionCopy.DB(TestDatabase).C("ipPort")
 
-	//fmt.Printf("RunQuery : %d : Executing\n")
+	fmt.Printf("RunQuery : %d : Executing\n")
 
 	// Retrieve the list of stations.
 	var deliveries []models.Delivery
@@ -106,6 +109,5 @@ func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup) {
 		return
 	}
 
-	//fmt.Printf("RunQuery : %d : Count[%d]\n", len(deliveries))
-	fmt.Println("Count: ", len(deliveries))
+	fmt.Printf("RunQuery : %d : Count[%d]\n", len(deliveries))
 }
