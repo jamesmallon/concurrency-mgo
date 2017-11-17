@@ -2,14 +2,38 @@
 
 
 [[projects]]
+  name = "github.com/julienschmidt/httprouter"
+  packages = ["."]
+  revision = "8c199fb6259ffc1af525cc3ad52ee60ba8359669"
+  version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  name = "go4.org"
+  packages = ["syncutil/singleflight"]
+  revision = "034d17a462f7b2dcd1a4a73553ec5357ff6e6c6e"
+
+[[projects]]
+  name = "gopkg.in/go-redis/cache.v5"
+  packages = [".","lrucache"]
+  revision = "382c5325e5c5650fd4f18fe64a14cf72f95ef5bf"
+  version = "v5.0.4"
+
+[[projects]]
   branch = "v2"
   name = "gopkg.in/mgo.v2"
   packages = [".","bson","internal/json","internal/sasl","internal/scram"]
   revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 
+[[projects]]
+  name = "gopkg.in/redis.v5"
+  packages = [".","internal","internal/consistenthash","internal/hashtag","internal/pool","internal/proto"]
+  revision = "a16aeec10ff407b1e7be6dd35797ccf5426ef0f0"
+  version = "v5.2.9"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f6e466625d21d47bfbaf0ac269619cea8e2f0342460342ef2f67118f40d0e294"
+  inputs-digest = "7428614d15b7c133548df109fbfbd4964b93c0ba944d8d09f343bd8b63e420c6"
   solver-name = "gps-cdcl"
   solver-version = 1

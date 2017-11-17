@@ -54,7 +54,6 @@ func Set(keys []string, vals []SomeObj, wg *sync.WaitGroup) {
 		// singleton is thread safe and could be used with goroutines
 		go func() {
 			codec := GetInstance()
-
 			codec.Set(&cache.Item{
 				Key:        k,
 				Object:     vals[i],
