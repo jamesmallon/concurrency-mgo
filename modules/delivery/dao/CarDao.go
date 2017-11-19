@@ -2,36 +2,65 @@ package dao
 
 import (
 	"fmt"
-	"microservices/api/modules/flowcontrol/models"
-	"userv/commons/database"
-
+	"github.com/johnthegreenobrien/Alliggator"
 	"gopkg.in/mgo.v2/bson"
+	"sync"
+	"userv/commons/database"
+	"userv/modules/delivery/models"
 )
 
 /**
  *
  */
-type CarDao struct {
+type carDao struct {
 	coll string
 }
 
 /**
  * @return *CarDao
  */
-func DomainDAO() *CarDao {
-	return &CarDao{"domain"}
+func NewCarDao() *carDao {
+	return &carDao{"ipPorts"}
 }
 
-/**
- * @param string jsonStr
- * @return interface{}
- */
-func (us CarDao) CheckDomainBkp(jsonStr string) interface{} {
+func (us *carDao) RunQuery(waitGroup *sync.WaitGroup) {
 	db := database.ConnMongo()
-	result := []models.Domain{}
-	err := db.GetCollection(us.coll).Pipe(alliggator.Piperize(jsonStr)).All(&result)
+
+	defer waitGroup.Done()
+
+	sessionCopy := db.GetSession().Copy()
+	defer sessionCopy.Close()
+
+	// Get a collection to execute the query against.
+	collection := sessionCopy.DB("delivery").C(us.coll)
+
+	// Retrieve the list of stations.
+	var deliveries models.Delivery
+
+	jsonStr := `[{"$sort": {"counter": 1, "_id": 1}},{"$limit": 1}]`
+	err := collection.Pipe(alliggator.Piperize(jsonStr)).One(&deliveries)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("RunQuery : ERROR : %s\n", err)
+		return
 	}
-	return result
+
+	change := db.GetIncrementer("counter")
+	_, err = collection.Find(bson.M{"ipPort": deliveries.IpPort}).Apply(change, &deliveries)
+	if err != nil {
+		return
+	}
+
+	fmt.Println("Delivery:", deliveries)
 }
+
+//func (us *carDao) IncDomainCount(domain string, ipPort string) bool {
+//	db := database.ConnMongo()
+//	change := db.GetIncrementer("counter")
+//
+//	domainModel := models.Domain{}
+//	_, err := db.GetCollection(domain).Find(bson.M{"ipPort": ipPort}).Apply(change, &domainModel)
+//	if err != nil {
+//		return false
+//	}
+//	return true
+//}

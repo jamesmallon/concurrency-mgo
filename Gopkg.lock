@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/johnthegreenobrien/Alliggator"
+  packages = [".","models"]
+  revision = "260810e79854f1dc7902103b26314e4a6e1db46a"
+  version = "v1.0"
+
+[[projects]]
   name = "github.com/julienschmidt/httprouter"
   packages = ["."]
   revision = "8c199fb6259ffc1af525cc3ad52ee60ba8359669"
@@ -34,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7428614d15b7c133548df109fbfbd4964b93c0ba944d8d09f343bd8b63e420c6"
+  inputs-digest = "174222d2df0a0400472c44de3b0e313f8f8c9ea37c4e6457695fbda580ffa8c4"
   solver-name = "gps-cdcl"
   solver-version = 1

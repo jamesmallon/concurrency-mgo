@@ -9,5 +9,6 @@ type (
 		Id       bson.ObjectId `bson:"_id,omitempty"`
 		IpPort   string        `bson:"ipPort"`
 		Protocol string        `bson:"protocol"`
+		Counter  string        `bson:"counter"`
 	}
 )

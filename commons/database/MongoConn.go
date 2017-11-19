@@ -5,17 +5,23 @@ package database
 import (
 	"fmt"
 	"gopkg.in/mgo.v2"
-	//"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/bson"
 	//"reflect"
-	"sync"
+	//"sync"
 	"time"
-	"userv/modules/delivery/models"
 )
 
 /**
  * This file implements the singleton pattern to avoid the sistem to deal with more
  * than one Mongodb connection at once.
  */
+
+const (
+	MongoDBHosts = "localhost:27307"
+	AuthDatabase = "delivery"
+	AuthUserName = "deliveryUser"
+	AuthPassword = "delivery123"
+)
 
 /**
  *
@@ -34,14 +40,6 @@ func ConnMongo() *mongoSession {
 	db := &mongoSession{}
 	return db.connectSingleton()
 }
-
-const (
-	MongoDBHosts = "localhost:27307"
-	AuthDatabase = "delivery"
-	AuthUserName = "deliveryUser"
-	AuthPassword = "delivery123"
-	TestDatabase = "delivery"
-)
 
 // main is the entry point for the application.
 func (db *mongoSession) connectSingleton() *mongoSession {
@@ -78,34 +76,14 @@ func (db *mongoSession) connectSingleton() *mongoSession {
 	return db
 }
 
-// RunQuery is a function that is launched as a goroutine to perform
-// the MongoDB work.
-//func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup, mongoSession *mgo.Session) {
-func (db *mongoSession) RunQuery(waitGroup *sync.WaitGroup) {
-	// Decrement the wait group count so the program knows this
-	// has been completed once the goroutine exits.
-	defer waitGroup.Done()
+func (db *mongoSession) GetSession() *mgo.Session {
+	return db.session
+}
 
-	// Request a socket connection from the session to process our query.
-	// Close the session when the goroutine exits and put the connection back
-	// into the pool.
-	sessionCopy := db.session.Copy()
-	//sessionCopy := db.Session.Copy()
-	defer sessionCopy.Close()
-
-	// Get a collection to execute the query against.
-	collection := sessionCopy.DB(TestDatabase).C("ipPorts")
-
-	//fmt.Printf("RunQuery : %d : Executing\n")
-
-	// Retrieve the list of stations.
-	var deliveries []models.Delivery
-	err := collection.Find(nil).All(&deliveries)
-	if err != nil {
-		fmt.Printf("RunQuery : ERROR : %s\n", err)
-		return
+func (db *mongoSession) GetIncrementer(field string) mgo.Change {
+	change := mgo.Change{
+		Update:    bson.M{"$inc": bson.M{field: 1}},
+		ReturnNew: true,
 	}
-
-	//fmt.Printf("RunQuery : %d : Count[%d]\n", len(deliveries))
-	fmt.Println("Count: ", len(deliveries))
+	return change
 }
