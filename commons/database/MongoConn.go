@@ -26,23 +26,23 @@ const (
 /**
  *
  */
-type mongoSession struct {
+type MongoSession struct {
 	session    *mgo.Session
 	database   *mgo.Database
 	collection *mgo.Collection
 }
 
 /**
- * @method db.sessione.Clone() GetmongoSession It create and instantiate a Mongodb connection
+ * @method db.sessione.Clone() GetMongoSession It create and instantiate a Mongodb connection
  * @return db.sessione.Clone()
  */
-func ConnMongo() *mongoSession {
-	db := &mongoSession{}
+func ConnMongo() *MongoSession {
+	db := &MongoSession{}
 	return db.connect()
 }
 
 // main is the entry point for the application.
-func (db *mongoSession) connect() *mongoSession {
+func (db *MongoSession) connect() *MongoSession {
 
 	if db.session == nil {
 		// We need this object to establish a session to our MongoDB.
@@ -76,11 +76,11 @@ func (db *mongoSession) connect() *mongoSession {
 	return db
 }
 
-func (db *mongoSession) GetSession() *mgo.Session {
+func (db *MongoSession) GetSession() *mgo.Session {
 	return db.session
 }
 
-func (db *mongoSession) GetIncrementer(field string) mgo.Change {
+func (db *MongoSession) GetIncrementer(field string) mgo.Change {
 	change := mgo.Change{
 		Update:    bson.M{"$inc": bson.M{field: 1}},
 		ReturnNew: true,

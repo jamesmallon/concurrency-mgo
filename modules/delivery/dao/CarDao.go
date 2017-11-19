@@ -3,6 +3,7 @@ package dao
 import (
 	"fmt"
 	"github.com/johnthegreenobrien/Alliggator"
+	//"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"userv/commons/database"
@@ -23,8 +24,7 @@ func NewCarDao() *carDao {
 	return &carDao{"ipPorts"}
 }
 
-func (us *carDao) RunQuery(waitGroup *sync.WaitGroup) {
-	db := database.ConnMongo()
+func (us *carDao) RunQuery(waitGroup *sync.WaitGroup, db *database.MongoSession) {
 
 	defer waitGroup.Done()
 

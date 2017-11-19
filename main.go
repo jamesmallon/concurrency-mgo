@@ -4,7 +4,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"log"
 	"net/http"
-	//"userv/commons/database"
+	"userv/commons/database"
 	"userv/modules/delivery"
 )
 
@@ -23,8 +23,8 @@ func main() {
 	// router := &http.Client{
 	// 	Transport: transport,
 	// }
-
-	delivery.RouteRegister(router)
+	mongoSession := database.ConnMongo()
+	delivery.RouteRegister(router, mongoSession)
 
 	server := &http.Server{Addr: ":3000", Handler: router}
 	// server.SetKeepAlivesEnabled(false) // setting keepalive to false
