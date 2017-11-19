@@ -52,15 +52,3 @@ func (us *carDao) RunQuery(waitGroup *sync.WaitGroup) {
 
 	fmt.Println("Delivery:", deliveries)
 }
-
-//func (us *carDao) IncDomainCount(domain string, ipPort string) bool {
-//	db := database.ConnMongo()
-//	change := db.GetIncrementer("counter")
-//
-//	domainModel := models.Domain{}
-//	_, err := db.GetCollection(domain).Find(bson.M{"ipPort": ipPort}).Apply(change, &domainModel)
-//	if err != nil {
-//		return false
-//	}
-//	return true
-//}

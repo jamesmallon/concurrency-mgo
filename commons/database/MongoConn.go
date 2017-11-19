@@ -38,11 +38,11 @@ type mongoSession struct {
  */
 func ConnMongo() *mongoSession {
 	db := &mongoSession{}
-	return db.connectSingleton()
+	return db.connect()
 }
 
 // main is the entry point for the application.
-func (db *mongoSession) connectSingleton() *mongoSession {
+func (db *mongoSession) connect() *mongoSession {
 
 	if db.session == nil {
 		// We need this object to establish a session to our MongoDB.
