@@ -41,11 +41,9 @@ func ConnMongo() *MongoSession {
 	return db.connect()
 }
 
-// main is the entry point for the application.
 func (db *MongoSession) connect() *MongoSession {
 
 	if db.session == nil {
-		// We need this object to establish a session to our MongoDB.
 		mongoDBDialInfo := &mgo.DialInfo{
 			Addrs:    []string{MongoDBHosts},
 			Timeout:  60 * time.Second,
@@ -54,8 +52,6 @@ func (db *MongoSession) connect() *MongoSession {
 			Password: AuthPassword,
 		}
 
-		// Create a session which maintains a pool of socket connections
-		// to our MongoDB.
 		var err error
 		db.session, err = mgo.DialWithInfo(mongoDBDialInfo)
 		if err != nil {
@@ -64,20 +60,34 @@ func (db *MongoSession) connect() *MongoSession {
 			fmt.Println("Session Created")
 		}
 
-		// Reads may not be entirely up-to-date, but they will always see the
-		// history of changes moving forward, the data read will be consistent
-		// across sequential queries in the same session, and modifications made
-		// within the session will be observed in following queries (read-your-writes).
-		// http://godoc.org/labix.org/v2/mgo#Session.SetMode
 		db.session.SetMode(mgo.Monotonic, true)
+		//db.session = db.session.Copy()
 	}
-	//db.session = db.session
-
 	return db
 }
 
 func (db *MongoSession) GetSession() *mgo.Session {
-	return db.session
+	return db.session.Copy()
+}
+
+/**
+ * @method db.db UseDB
+ * @param string db
+ * @return *mgo.Database db.db
+ */
+func (db *MongoSession) UseDB(dbase string) *MongoSession {
+	db.database = db.session.DB(dbase)
+	return db
+}
+
+/**
+ * @method db.collection GetCollection
+ * @param string coll
+ * @return *mgo.Collection db.collection
+ */
+func (db *MongoSession) GetCollection(coll string) *mgo.Collection {
+	db.collection = db.database.C(coll)
+	return db.collection
 }
 
 func (db *MongoSession) GetIncrementer(field string) mgo.Change {
@@ -86,4 +96,22 @@ func (db *MongoSession) GetIncrementer(field string) mgo.Change {
 		ReturnNew: true,
 	}
 	return change
+}
+
+func (db *MongoSession) GetIndexObj(indexField []string, unique bool, dropDups bool, background bool, sparse bool) mgo.Index {
+	index := mgo.Index{
+		Key:        indexField,
+		Unique:     unique,
+		DropDups:   dropDups,
+		Background: background, // See notes.
+		Sparse:     sparse,
+	}
+	return index
+}
+
+/**
+ * @method void Close
+ */
+func (db *MongoSession) Close() {
+	defer db.session.Close()
 }

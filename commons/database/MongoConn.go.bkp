@@ -1,0 +1,27 @@
+" Press ? for help
+
+>----------Bookmarks----------
+>ghosting <me/jaeger/ghosting/
+>Golang-Web-App <lang-Web-App/
+>microservices <microservices/
+>userv <ome/john/go/src/userv/
+>vim /opt/vim/
+
+.. (up a dir)
+/home/john/go/src/userv/
+🖿 .git/
+🖿 commons/
+  🖿 cache/
+  🖿 database/
+      MongoConn.go
+🖿 modules/
+🖿 utils/
+🖿 vendor/
+  .gitignore
+  Gopkg.lock
+  Gopkg.toml
+  LICENSE
+  main*
+  main.go
+  README.md
+  rouchaining

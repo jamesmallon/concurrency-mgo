@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"userv/commons/database"
-	"userv/modules/delivery"
+	"userv/modules/dailyDelivery"
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 	// 	Transport: transport,
 	// }
 	mongoSession := database.ConnMongo()
-	delivery.RouteRegister(router, mongoSession)
+	dailyDelivery.RouteRegister(router, mongoSession)
 
 	server := &http.Server{Addr: ":3000", Handler: router}
 	// server.SetKeepAlivesEnabled(false) // setting keepalive to false
