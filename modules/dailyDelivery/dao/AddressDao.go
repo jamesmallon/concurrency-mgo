@@ -26,22 +26,16 @@ func NewAddressDao() *addressDao {
  * @method RunQuery
  */
 func (us *addressDao) GetAddress(wg *sync.WaitGroup, mgoSess *database.MongoSession) (*models.Address, error) {
-	//db := mgoSess.UseDB("delivery")
+	db := mgoSess.UseDB("delivery")
 	var address models.Address
 	wg.Add(1)
 	c := make(chan *models.Address) // creates a new channel
 
 	go func() {
-		//db := mgoSess.GetSession().Copy()
-		db := mgoSess.GetSession()
-		defer db.Close()
-
-		// Get a collection to execute the query against.
-		collection := db.DB("delivery").C(us.coll)
+		defer db.GetSession().Close()
 
 		jsonStr := `[{"$sort": {"_id": 1}},{"$limit": 1}]`
-		err := collection.Pipe(alliggator.Piperize(jsonStr)).One(&address)
-		//err := db.GetCollection(us.coll).Pipe(alliggator.Piperize(jsonStr)).One(&address)
+		err := db.GetCollection(us.coll).Pipe(alliggator.Piperize(jsonStr)).One(&address)
 		if err != nil {
 			fmt.Printf("RunQuery : ERROR : %s\n", err)
 			return

@@ -61,7 +61,7 @@ func (db *MongoSession) connect() *MongoSession {
 		}
 
 		db.session.SetMode(mgo.Monotonic, true)
-		//db.session = db.session.Copy()
+		db.session = db.session.Copy()
 	}
 	return db
 }
@@ -112,6 +112,6 @@ func (db *MongoSession) GetIndexObj(indexField []string, unique bool, dropDups b
 /**
  * @method void Close
  */
-func (db *MongoSession) Close() {
-	defer db.session.Close()
-}
+//func (db *MongoSession) Close() {
+//	defer db.session.Close()
+//}
