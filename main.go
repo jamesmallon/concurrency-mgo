@@ -11,18 +11,6 @@ import (
 func main() {
 	router := httprouter.New()
 
-	// transport := &http.Transport{
-	// 	Proxy: http.ProxyFromEnvironment,
-	// 	Dial: (&net.Dialer{
-	// 		Timeout:   30 * time.Second,
-	// 		KeepAlive: time.Minute,
-	// 	}).Dial,
-	// 	TLSHandshakeTimeout: 10 * time.Second,
-	// }
-	//
-	// router := &http.Client{
-	// 	Transport: transport,
-	// }
 	mongoSession := database.ConnMongo()
 	dailyDelivery.RouteRegister(router, mongoSession)
 

@@ -21,6 +21,7 @@ const (
 	AuthDatabase = "delivery"
 	AuthUserName = "deliveryUser"
 	AuthPassword = "delivery123"
+	Database     = "delivery"
 )
 
 /**
@@ -62,6 +63,7 @@ func (db *MongoSession) connect() *MongoSession {
 
 		db.session.SetMode(mgo.Monotonic, true)
 		db.session = db.session.Copy()
+		db.database = db.session.DB(Database)
 	}
 	return db
 }

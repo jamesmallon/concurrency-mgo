@@ -7,7 +7,7 @@ import (
 	"sync"
 	"userv/commons/database"
 	"userv/modules/dailyDelivery/dao"
-	"userv/modules/dailyDelivery/models"
+	//"userv/modules/dailyDelivery/models"
 )
 
 /**
@@ -29,12 +29,11 @@ func DeliveryController(mongoSession *database.MongoSession) *deliveryController
  */
 func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	deliveryDao := dao.NewDeliveryDao()
+
 	var waitGroup sync.WaitGroup
-
-	c := make(chan *models.Delivery) // creates a new channel
-	waitGroup.Add(1)
-	go deliveryDao.GetDeliveryAddress(&waitGroup, uc.mSession, c)
-
+	delivery, _ := deliveryDao.GetDelivery(&waitGroup, uc.mSession)
 	waitGroup.Wait()
-	fmt.Println("Query Completed")
+	delivery, _ = deliveryDao.IncrementField(&waitGroup, uc.mSession, "sussDlry", delivery)
+	waitGroup.Wait()
+	fmt.Println(delivery)
 }

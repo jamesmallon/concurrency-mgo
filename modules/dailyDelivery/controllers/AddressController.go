@@ -29,11 +29,9 @@ func AddressController(mongoSession *database.MongoSession) *addressController {
  */
 func (uc *addressController) GetAddress(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	addressDao := dao.NewAddressDao()
+
 	var waitGroup sync.WaitGroup
-
 	address, _ := addressDao.GetAddress(&waitGroup, uc.mSession)
-
 	waitGroup.Wait()
-	fmt.Println("Query Completed: ", address.ZipCode)
-	w.Write([]byte("write\n some \n output\n"))
+	fmt.Println(address)
 }

@@ -3,7 +3,6 @@ package dao
 import (
 	"fmt"
 	"github.com/johnthegreenobrien/Alliggator"
-	//"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"userv/commons/database"
@@ -25,48 +24,48 @@ func NewDeliveryDao() *deliveryDao {
 }
 
 /*
- * @method RunQuery
+ * @method GetDelivery
  */
-func (us *deliveryDao) GetDeliveryAddress(wg *sync.WaitGroup, db *database.MongoSession, c chan *models.Delivery) {
-
-	defer wg.Done()
-
-	sessionCopy := db.GetSession().Copy()
-	defer sessionCopy.Close()
-
-	// Get a collection to execute the query against.
-	collection := sessionCopy.DB("delivery").C(us.coll)
-
-	// Retrieve the list of stations.
+func (us *deliveryDao) GetDelivery(wg *sync.WaitGroup, db *database.MongoSession) (*models.Delivery, error) {
 	var delivery models.Delivery
+	wg.Add(1)
+	c := make(chan *models.Delivery) // creates a new channel
 
-	jsonStr := `[{"$sort": {"counter": 1, "_id": 1}},{"$limit": 1}]`
-	err := collection.Pipe(alliggator.Piperize(jsonStr)).One(&delivery)
-	if err != nil {
-		fmt.Printf("RunQuery : ERROR : %s\n", err)
-		return
-	}
-	fmt.Println("Delivery:", delivery)
-	c <- &delivery
+	go func() {
+		defer db.GetSession().Close()
+
+		jsonStr := `[{"$sort": {"sussDlry": 1,"_id": 1}},{"$limit": 1}]`
+		err := db.GetCollection(us.coll).Pipe(alliggator.Piperize(jsonStr)).One(&delivery)
+		if err != nil {
+			fmt.Println("GetDelivery ERROR:", err)
+			return
+		}
+		c <- &delivery
+	}()
+	defer wg.Done()
+	return <-c, nil
 }
 
 /**
  * @method IncrementField
  */
-func (us *deliveryDao) IncrementField(wg *sync.WaitGroup, db *database.MongoSession, field string, delivery *models.Delivery) {
+func (us *deliveryDao) IncrementField(wg *sync.WaitGroup, db *database.MongoSession, field string, delivery *models.Delivery) (*models.Delivery, error) {
+	wg.Add(1)
+	c := make(chan *models.Delivery) // creates a new channel
 
+	go func() {
+		defer db.GetSession().Close()
+
+		change := db.GetIncrementer(field)
+		_, err := db.GetCollection(us.coll).Find(bson.M{"_id": delivery.Id}).Apply(change, &delivery)
+		if err != nil {
+			fmt.Println("IncrementField ERROR:", err)
+			return
+		}
+		c <- delivery
+	}()
 	defer wg.Done()
-
-	sessionCopy := db.GetSession().Copy()
-	defer sessionCopy.Close()
-
-	// Get a collection to execute the query against.
-	collection := sessionCopy.DB("delivery").C(us.coll)
-	change := db.GetIncrementer(field)
-	_, err := collection.Find(bson.M{"_id": delivery.Id}).Apply(change, &delivery)
-	if err != nil {
-		return
-	}
+	return <-c, nil
 }
 
 //func (us *domainDAO) CreateCollIndex(domain string, indexField []string) {
