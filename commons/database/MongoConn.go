@@ -1,117 +1,57 @@
-// This program provides a sample application for using MongoDB with
-// the mgo driver.
 package database
 
 import (
-	"fmt"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-	//"reflect"
-	//"sync"
+	//	"gopkg.in/mgo.v2/bson"
+	"log"
+	"sync"
 	"time"
+	"userv/modules/dailyDelivery/models"
 )
-
-/**
- * This file implements the singleton pattern to avoid the sistem to deal with more
- * than one Mongodb connection at once.
- */
 
 const (
 	MongoDBHosts = "localhost:27307"
 	AuthDatabase = "delivery"
 	AuthUserName = "deliveryUser"
 	AuthPassword = "delivery123"
+	TestDatabase = "delivery"
 )
 
-/**
- *
- */
-type MongoSession struct {
-	session    *mgo.Session
-	database   *mgo.Database
-	collection *mgo.Collection
-}
+var mongoSession *mgo.Session
 
-/**
- * @method db.sessione.Clone() GetMongoSession It create and instantiate a Mongodb connection
- * @return db.sessione.Clone()
- */
-func ConnMongo() *MongoSession {
-	db := &MongoSession{}
-	return db.connect()
-}
+// main is the entry point for the application.
+func ConnMongo() *mgo.Session {
 
-func (db *MongoSession) connect() *MongoSession {
-
-	if db.session == nil {
-		mongoDBDialInfo := &mgo.DialInfo{
-			Addrs:    []string{MongoDBHosts},
-			Timeout:  60 * time.Second,
-			Database: AuthDatabase,
-			Username: AuthUserName,
-			Password: AuthPassword,
-		}
-
-		var err error
-		db.session, err = mgo.DialWithInfo(mongoDBDialInfo)
-		if err != nil {
-			fmt.Println("CreateSession: %s\n", err)
-		} else {
-			fmt.Println("Session Created")
-		}
-
-		db.session.SetMode(mgo.Monotonic, true)
-		db.session = db.session.Copy()
+	// We need this object to establish a session to our MongoDB.
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{MongoDBHosts},
+		Timeout:  60 * time.Second,
+		Database: AuthDatabase,
+		Username: AuthUserName,
+		Password: AuthPassword,
 	}
-	return db
-}
 
-func (db *MongoSession) GetSession() *mgo.Session {
-	return db.session.Copy()
-}
-
-/**
- * @method db.db UseDB
- * @param string db
- * @return *mgo.Database db.db
- */
-func (db *MongoSession) UseDB(dbase string) *MongoSession {
-	db.database = db.session.DB(dbase)
-	return db
-}
-
-/**
- * @method db.collection GetCollection
- * @param string coll
- * @return *mgo.Collection db.collection
- */
-func (db *MongoSession) GetCollection(coll string) *mgo.Collection {
-	db.collection = db.database.C(coll)
-	return db.collection
-}
-
-func (db *MongoSession) GetIncrementer(field string) mgo.Change {
-	change := mgo.Change{
-		Update:    bson.M{"$inc": bson.M{field: 1}},
-		ReturnNew: true,
+	mongoSession, err := mgo.DialWithInfo(mongoDBDialInfo)
+	if err != nil {
+		log.Fatalf("CreateSession: %s\n", err)
 	}
-	return change
+
+	mongoSession.SetMode(mgo.Monotonic, true)
+	return mongoSession
 }
 
-func (db *MongoSession) GetIndexObj(indexField []string, unique bool, dropDups bool, background bool, sparse bool) mgo.Index {
-	index := mgo.Index{
-		Key:        indexField,
-		Unique:     unique,
-		DropDups:   dropDups,
-		Background: background, // See notes.
-		Sparse:     sparse,
+func RunQuery(waitGroup *sync.WaitGroup, mongoSession *mgo.Session) {
+	defer waitGroup.Done()
+
+	sessionCopy := mongoSession.Copy()
+	defer sessionCopy.Close()
+
+	collection := sessionCopy.DB(TestDatabase).C("delivery")
+
+	var delivery models.Delivery
+	err := collection.Find(nil).One(&delivery)
+	if err != nil {
+		log.Printf("RunQuery : ERROR : %s\n", err)
+		return
 	}
-	return index
 }
-
-/**
- * @method void Close
- */
-//func (db *MongoSession) Close() {
-//	defer db.session.Close()
-//}

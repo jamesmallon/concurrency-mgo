@@ -6,9 +6,8 @@ import (
 
 type (
 	Delivery struct {
-		Id        bson.ObjectId `bson:"_id,omitempty"`
-		Address   string        `bson:"address"`
-		ZipCode   string        `bson:"zipCode"`
-		sussDelvd int           `bson:"sussDelvd"`
+		Id      bson.ObjectId `bson:"_id,omitempty"`
+		Address string        `bson:"address"`
+		ZipCode string        `bson:"zipCode"`
 	}
 )
