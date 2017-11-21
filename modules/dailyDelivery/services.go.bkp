@@ -1,0 +1,40 @@
+package flowcontrol
+
+import (
+	"github.com/emicklei/mora/session"
+	"github.com/justinas/alice"
+	"microservices/api/commons/router"
+	"microservices/api/middleware"
+	"microservices/api/modules/flowcontrol/controllers"
+)
+
+/**
+ *
+ */
+func Register(sessMng *session.SessionManager, route *router.Router, commonHandlers alice.Chain) {
+	domainController := controllers.NewDomainController(sessMng)
+
+	// ab -qrk -p data.txt -c 1 -n 5 -T application/vnd.api+json -H 'Accept: application/vnd.api+json' "http://127.0.0.1:8888/local/flowcontrol/getipport"
+
+	/*
+		clear; curl -X POST 'http://127.0.0.1:8888/local/flowcontrol' -H 'Content-Type: application/vnd.api+json' -H 'Accept: application/vnd.api+json' \
+		  --data-binary '[{"$match":
+			{"domain": "carrierexpress.com.br"}
+		  },
+		  {"$project": {
+			"_id": 0,
+			"domain": 1,
+			"ipPort": 1}
+		  },
+		  {"$sort": {"ipPort": 1}},
+		  {"$limit": 10},
+		  {"$skip": 1}]'
+	*/
+	// route.Post("/:alias/flowcontrol", commonHandlers.Append(middleware.ContentTypeHandler).ThenFunc(fcController.AggregateDIPHandler))
+
+	/*
+		clear; curl -X POST 'http://127.0.0.1:8888/local/flowcontrol/getipport' -H 'Content-Type: application/vnd.api+json' -H 'Accept: application/vnd.api+json' \
+		--data-binary '{"domain": "carrierexpress.com.br/"}'
+	*/
+	route.Post("/:alias/flowcontrol/getipport", commonHandlers.Append(middleware.ContentTypeHandler).ThenFunc(domainController.GetDIPHandler))
+}

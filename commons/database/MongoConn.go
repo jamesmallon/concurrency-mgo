@@ -41,6 +41,8 @@ func ConnMongo() *MongoSession {
 	return db.connect()
 }
 
+//var mgoSession *mgo.Session
+
 // main is the entry point for the application.
 func (db *MongoSession) connect() *MongoSession {
 
@@ -54,8 +56,6 @@ func (db *MongoSession) connect() *MongoSession {
 			Password: AuthPassword,
 		}
 
-		// Create a session which maintains a pool of socket connections
-		// to our MongoDB.
 		var err error
 		db.session, err = mgo.DialWithInfo(mongoDBDialInfo)
 		if err != nil {
@@ -64,11 +64,6 @@ func (db *MongoSession) connect() *MongoSession {
 			fmt.Println("Session Created")
 		}
 
-		// Reads may not be entirely up-to-date, but they will always see the
-		// history of changes moving forward, the data read will be consistent
-		// across sequential queries in the same session, and modifications made
-		// within the session will be observed in following queries (read-your-writes).
-		// http://godoc.org/labix.org/v2/mgo#Session.SetMode
 		db.session.SetMode(mgo.Monotonic, true)
 	}
 	//db.session = db.session
