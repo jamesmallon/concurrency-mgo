@@ -1,11 +1,11 @@
-// This program provides a sample application for using MongoDB with
-// the mgo driver.
 package database
 
 import (
 	"fmt"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	//"gopkg.in/mgo.v2/bson"
+	"github.com/johnthegreenobrien/Alliggator"
+	"userv/modules/dailyDelivery/models"
 	//"reflect"
 	"sync"
 	"time"
@@ -15,7 +15,6 @@ import (
  * This file implements the singleton pattern to avoid the sistem to deal with more
  * than one Mongodb connection at once.
  */
-
 const (
 	MongoDBHosts = "localhost:27307"
 	AuthDatabase = "delivery"
@@ -33,84 +32,91 @@ type MongoSession struct {
 	collection *mgo.Collection
 }
 
-/**
- * @method db.sessione.Clone() GetMongoSession It create and instantiate a Mongodb connection
- * @return db.sessione.Clone()
- */
-func ConnMongo() *MongoSession {
-	db := &MongoSession{}
-	return db.connect()
-}
-
+var mgoSession *mgo.Session
 var once sync.Once
 
-func (db *MongoSession) connect() *MongoSession {
+func GetSession() *mgo.Session {
 	once.Do(func() {
 		var err error
-		db.session, err = mgo.DialWithInfo(&mgo.DialInfo{
-			Addrs:    []string{MongoDBHosts},
-			Timeout:  60 * time.Second,
+		mgoSession, err = mgo.DialWithInfo(&mgo.DialInfo{
+			Addrs: []string{MongoDBHosts},
+			//Timeout: 60 * time.Second,
+			Timeout:  1 * time.Second,
 			Database: AuthDatabase,
 			Username: AuthUserName,
 			Password: AuthPassword,
 		})
 		if err != nil {
 			fmt.Println("CreateSession: %s\n", err)
-		} else {
-			fmt.Println("Session Created")
 		}
-
-		db.session.SetMode(mgo.Monotonic, true)
-		db.session = db.session.Copy()
-		db.database = db.session.DB(Database)
+		mgoSession.SetMode(mgo.Monotonic, true)
 	})
-	return db
+	return mgoSession
 }
 
-func (db *MongoSession) GetSession() *mgo.Session {
-	return db.session.Copy()
+func GetThat(wg *sync.WaitGroup) (*models.Address, error) {
+	var address models.Address
+	c := make(chan *models.Address) // creates a new channel
+
+	wg.Add(1)
+	go func() {
+		session := GetSession().Copy()
+		defer session.Close()
+
+		jsonStr := `[{"$sort": {"_id": 1}},{"$limit": 1}]`
+		err := session.DB(Database).C("delivery").Pipe(alliggator.Piperize(jsonStr)).One(&address)
+		if err != nil {
+			fmt.Println("GetAddress ERROR:", err)
+			return
+		} else {
+			fmt.Println("Mongo is ongoing")
+		}
+		c <- &address
+		wg.Done()
+	}()
+
+	return <-c, nil
 }
 
-/**
- * @method db.db UseDB
- * @param string db
- * @return *mgo.Database db.db
- */
-func (db *MongoSession) UseDB(dbase string) *MongoSession {
-	db.database = db.session.DB(dbase)
-	return db
-}
-
-/**
- * @method db.collection GetCollection
- * @param string coll
- * @return *mgo.Collection db.collection
- */
-func (db *MongoSession) GetCollection(coll string) *mgo.Collection {
-	db.collection = db.database.C(coll)
-	return db.collection
-}
-
-func (db *MongoSession) GetIncrementer(field string) mgo.Change {
-	change := mgo.Change{
-		Update:    bson.M{"$inc": bson.M{field: 1}},
-		ReturnNew: true,
-	}
-	return change
-}
-
-func (db *MongoSession) GetIndexObj(indexField []string,
-	unique bool,
-	dropDups bool,
-	background bool,
-	sparse bool) mgo.Index {
-
-	index := mgo.Index{
-		Key:        indexField,
-		Unique:     unique,
-		DropDups:   dropDups,
-		Background: background, // See notes.
-		Sparse:     sparse,
-	}
-	return index
-}
+//func RunQuery(waitGroup *sync.WaitGroup, mongoSession *mgo.Session) *models.Delivery {
+//	defer waitGroup.Done()
+//
+//	sessionCopy := mongoSession.Copy()
+//	defer sessionCopy.Close()
+//
+//	// Get a collection to execute the query against.
+//	collection := GetInstance.DB(Database).C("delivery")
+//
+//	// Retrieve the list of stations.
+//	var delivery models.Delivery
+//	err := collection.Find(nil).One(&delivery)
+//	if err != nil {
+//		fmt.Println("RunQuery ERROR:", err)
+//		return delivery
+//	}
+//	return delivery
+//}
+//
+//func GetIncrementer(field string) mgo.Change {
+//	change := mgo.Change{
+//		Update:    bson.M{"$inc": bson.M{field: 1}},
+//		ReturnNew: true,
+//	}
+//	return change
+//}
+//
+//func GetIndexObj(indexField []string,
+//	unique bool,
+//	dropDups bool,
+//	background bool,
+//	sparse bool) mgo.Index {
+//
+//	index := mgo.Index{
+//		Key:        indexField,
+//		Unique:     unique,
+//		DropDups:   dropDups,
+//		Background: background, // See notes.
+//		Sparse:     sparse,
+//	}
+//	return index
+//}
