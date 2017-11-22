@@ -62,36 +62,3 @@ func Set(key string, val string, wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 }
-
-//func Set(keys []string, vals []SomeObj, wg *sync.WaitGroup) {
-//	for i, k := range keys {
-//		wg.Add(1)
-//		// singleton is thread safe and could be used with goroutines
-//		go func() {
-//			codec := GetInstance()
-//			codec.Set(&cache.Item{
-//				Key:        k,
-//				Object:     vals[i],
-//				Expiration: time.Hour,
-//			})
-//			wg.Done()
-//		}()
-//	}
-//}
-//func Get(keys []string, wg *sync.WaitGroup) chan SomeObj {
-//	wanted_objs := make(chan *SomeObj)
-//	for i, k := range keys {
-//		wg.Add(1)
-//		// singleton is thread safe and could be used with goroutines
-//		go func() {
-//			codec := GetInstance()
-//			wanted := new(SomeObj)
-//			if err := codec.Get(key, wanted); err == nil {
-//				wanted_objs <- wanted
-//			}
-//			wg.Done()
-//		}()
-//	}
-//	return wanted_objs
-//}
-//

@@ -7,7 +7,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	//"reflect"
-	//"sync"
+	"sync"
 	"time"
 )
 
@@ -42,19 +42,18 @@ func ConnMongo() *MongoSession {
 	return db.connect()
 }
 
-func (db *MongoSession) connect() *MongoSession {
+var once sync.Once
 
-	if db.session == nil {
-		mongoDBDialInfo := &mgo.DialInfo{
+func (db *MongoSession) connect() *MongoSession {
+	once.Do(func() {
+		var err error
+		db.session, err = mgo.DialWithInfo(&mgo.DialInfo{
 			Addrs:    []string{MongoDBHosts},
 			Timeout:  60 * time.Second,
 			Database: AuthDatabase,
 			Username: AuthUserName,
 			Password: AuthPassword,
-		}
-
-		var err error
-		db.session, err = mgo.DialWithInfo(mongoDBDialInfo)
+		})
 		if err != nil {
 			fmt.Println("CreateSession: %s\n", err)
 		} else {
@@ -64,7 +63,7 @@ func (db *MongoSession) connect() *MongoSession {
 		db.session.SetMode(mgo.Monotonic, true)
 		db.session = db.session.Copy()
 		db.database = db.session.DB(Database)
-	}
+	})
 	return db
 }
 
