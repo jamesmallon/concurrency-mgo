@@ -100,7 +100,12 @@ func (db *MongoSession) GetIncrementer(field string) mgo.Change {
 	return change
 }
 
-func (db *MongoSession) GetIndexObj(indexField []string, unique bool, dropDups bool, background bool, sparse bool) mgo.Index {
+func (db *MongoSession) GetIndexObj(indexField []string,
+	unique bool,
+	dropDups bool,
+	background bool,
+	sparse bool) mgo.Index {
+
 	index := mgo.Index{
 		Key:        indexField,
 		Unique:     unique,
@@ -110,10 +115,3 @@ func (db *MongoSession) GetIndexObj(indexField []string, unique bool, dropDups b
 	}
 	return index
 }
-
-/**
- * @method void Close
- */
-//func (db *MongoSession) Close() {
-//	defer db.session.Close()
-//}

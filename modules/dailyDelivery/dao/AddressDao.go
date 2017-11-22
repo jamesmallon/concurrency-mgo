@@ -16,7 +16,7 @@ type addressDao struct {
 }
 
 /**
- * @return *DeliveryDao
+ * @return *addressDao
  */
 func NewAddressDao() *addressDao {
 	return &addressDao{"address"}
@@ -27,9 +27,9 @@ func NewAddressDao() *addressDao {
  */
 func (us *addressDao) GetAddress(wg *sync.WaitGroup, db *database.MongoSession) (*models.Address, error) {
 	var address models.Address
-	wg.Add(1)
 	c := make(chan *models.Address) // creates a new channel
 
+	wg.Add(1)
 	go func() {
 		defer db.GetSession().Close()
 
@@ -42,5 +42,6 @@ func (us *addressDao) GetAddress(wg *sync.WaitGroup, db *database.MongoSession) 
 		c <- &address
 	}()
 	defer wg.Done()
+
 	return <-c, nil
 }

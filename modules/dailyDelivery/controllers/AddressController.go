@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
@@ -33,5 +34,10 @@ func (uc *addressController) GetAddress(w http.ResponseWriter, r *http.Request, 
 	var waitGroup sync.WaitGroup
 	address, _ := addressDao.GetAddress(&waitGroup, uc.mSession)
 	waitGroup.Wait()
-	fmt.Println(address)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	addrJson, _ := json.Marshal(address)
+	fmt.Fprintf(w, "%s", addrJson)
 }

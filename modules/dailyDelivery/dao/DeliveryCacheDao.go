@@ -10,23 +10,23 @@ import (
 )
 
 /**
- * @method deliveryDao
+ * @method deliveryCacheDao
  */
-type deliveryDao struct {
+type deliveryCacheDao struct {
 	coll string
 }
 
 /**
- * @return *DeliveryDao
+ * @return *DeliveryCacheDao
  */
-func NewDeliveryDao() *deliveryDao {
-	return &deliveryDao{"delivery"}
+func NewDeliveryCacheDao() *deliveryCacheDao {
+	return &deliveryCacheDao{"delivery"}
 }
 
 /*
  * @method GetDelivery
  */
-func (us *deliveryDao) GetDelivery(wg *sync.WaitGroup, db *database.MongoSession) (*models.Delivery, error) {
+func (us *deliveryCacheDao) GetDelivery(wg *sync.WaitGroup, db *database.MongoSession) (*models.Delivery, error) {
 	var delivery models.Delivery
 	c := make(chan *models.Delivery) // creates a new channel
 
@@ -50,7 +50,7 @@ func (us *deliveryDao) GetDelivery(wg *sync.WaitGroup, db *database.MongoSession
 /**
  * @method IncrementField
  */
-func (us *deliveryDao) IncrementField(wg *sync.WaitGroup, db *database.MongoSession, field string, delivery *models.Delivery) (*models.Delivery, error) {
+func (us *deliveryCacheDao) IncrementField(wg *sync.WaitGroup, db *database.MongoSession, field string, delivery *models.Delivery) (*models.Delivery, error) {
 	c := make(chan *models.Delivery) // creates a new channel
 
 	wg.Add(1)
@@ -81,6 +81,6 @@ func (us *deliveryDao) IncrementField(wg *sync.WaitGroup, db *database.MongoSess
 //	}
 //}
 //
-//func (us *deliveryDao) CreateCollection(collectionName string) {
+//func (us *deliveryCacheDao) CreateCollection(collectionName string) {
 //
 //}
