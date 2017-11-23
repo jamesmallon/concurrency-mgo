@@ -16,6 +16,13 @@ func GetInstance() *cache.Codec {
 	once.Do(func() {
 		client := redis.NewClient(&redis.Options{
 			Addr: "localhost:6379",
+			//PoolSize:           10,
+			//PoolTimeout:        3 * time.Second,
+			//DialTimeout:        10 * time.Second,
+			//ReadTimeout:        30 * time.Second,
+			//WriteTimeout:       30 * time.Second,
+			//IdleTimeout:        500 * time.Millisecond,
+			//IdleCheckFrequency: 500 * time.Millisecond,
 			//Password: "", // no password set
 			//DB:       0,  // use default DB
 		})

@@ -36,6 +36,7 @@ func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request
 	delivery, _ := deliveryDao.GetDelivery(&waitGroup, uc.mSession)
 	waitGroup.Wait()
 	delivery, _ = deliveryDao.IncrementField(&waitGroup, uc.mSession, "sussDlry", delivery)
+	fmt.Println(delivery)
 	waitGroup.Wait()
 	cache.Set("thiIsAKey", "keysValue", &waitGroup)
 	fmt.Println(cache.Get("thiIsAKey", &waitGroup))
