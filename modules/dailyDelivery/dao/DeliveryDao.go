@@ -27,8 +27,8 @@ func NewDeliveryDao() *deliveryDao {
  * @method GetDelivery
  */
 func (us *deliveryDao) GetDelivery(wg *sync.WaitGroup, db *database.MongoSession) (*models.Delivery, error) {
-	var delivery models.Delivery
 	c := make(chan *models.Delivery) // creates a new channel
+	var delivery *models.Delivery
 
 	wg.Add(1)
 	go func() {
@@ -40,11 +40,12 @@ func (us *deliveryDao) GetDelivery(wg *sync.WaitGroup, db *database.MongoSession
 			fmt.Println("GetDelivery ERROR:", err)
 			return
 		}
-		c <- &delivery
+		c <- delivery
+		defer wg.Done()
 	}()
-	defer wg.Done()
-
-	return <-c, nil
+	delivery = <-c
+	defer close(c)
+	return delivery, nil
 }
 
 /**
@@ -64,23 +65,26 @@ func (us *deliveryDao) IncrementField(wg *sync.WaitGroup, db *database.MongoSess
 			return
 		}
 		c <- delivery
+		defer wg.Done()
 	}()
-	defer wg.Done()
-
-	return <-c, nil
+	delivery = <-c
+	defer close(c)
+	return delivery, nil
 }
 
-//func (us *domainDAO) CreateCollIndex(domain string, indexField []string) {
-//	db := database.ConnMongo()
-//
-//	index := db.GetIndexObj(indexField, true, false, false, false)
-//
-//	err := db.GetCollection(domain).EnsureIndex(index)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//}
-//
-//func (us *deliveryDao) CreateCollection(collectionName string) {
-//
-//}
+/**
+ * @method CreateDailyCollection
+ */
+func (us *deliveryDao) CreateDailyCollection(wg *sync.WaitGroup, db *database.MongoSession, collName string) {
+	wg.Add(1)
+	go func() {
+		// create unique index for zip-code field
+		index := db.GetIndexObj([]string{"zipCode"}, true, false, false, false)
+
+		err := db.GetCollection(collName).EnsureIndex(index)
+		if err != nil {
+			fmt.Println(err)
+		}
+		wg.Done()
+	}()
+}

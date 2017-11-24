@@ -34,12 +34,13 @@ type MongoSession struct {
 }
 
 /**
- * @method db.sessione.Clone() GetMongoSession It create and instantiate a Mongodb connection
+ * @method db.sessione.Clone() GetMongoSession It creates and instantiates a Mongodb connection
  * @return db.sessione.Clone()
  */
 func ConnMongo() *MongoSession {
-	db := &MongoSession{}
-	return db.connect()
+	//db := &MongoSession{}
+	//return db.connect()
+	return &MongoSession{}
 }
 
 var once sync.Once
@@ -61,14 +62,15 @@ func (db *MongoSession) connect() *MongoSession {
 		}
 
 		db.session.SetMode(mgo.Monotonic, true)
-		db.session = db.session.Copy()
+		//db.session = db.session.Copy()
 		db.database = db.session.DB(Database)
 	})
 	return db
 }
 
 func (db *MongoSession) GetSession() *mgo.Session {
-	return db.session.Copy()
+	//return db.session.Copy()
+	return db.connect().session.Copy()
 }
 
 /**

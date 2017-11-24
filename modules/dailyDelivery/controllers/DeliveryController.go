@@ -38,8 +38,10 @@ func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request
 	delivery, _ = deliveryDao.IncrementField(&waitGroup, uc.mSession, "sussDlry", delivery)
 	fmt.Println(delivery)
 	waitGroup.Wait()
-	cache.Set("thiIsAKey", "keysValue", &waitGroup)
-	fmt.Println(cache.Get("thiIsAKey", &waitGroup))
+
+	rClient := cache.ConnRedis()
+	rClient.Set("thiIsAKey", "keysValue", &waitGroup)
+	fmt.Println(rClient.Get("thiIsAKey", &waitGroup))
 	waitGroup.Wait()
 
 	w.Header().Set("Content-Type", "application/json")
