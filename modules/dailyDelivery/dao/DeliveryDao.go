@@ -26,7 +26,8 @@ func NewDeliveryDao() *deliveryDao {
 /*
  * @method GetDelivery
  */
-func (us *deliveryDao) GetDelivery(wg *sync.WaitGroup, db *database.MongoSession) (*models.Delivery, error) {
+func (us *deliveryDao) GetDelivery(db *database.MongoSession) (*models.Delivery, error) {
+	var wg sync.WaitGroup
 	c := make(chan *models.Delivery) // creates a new channel
 	var delivery *models.Delivery
 
@@ -45,13 +46,15 @@ func (us *deliveryDao) GetDelivery(wg *sync.WaitGroup, db *database.MongoSession
 	}()
 	delivery = <-c
 	defer close(c)
+	wg.Wait()
 	return delivery, nil
 }
 
 /**
  * @method IncrementField
  */
-func (us *deliveryDao) IncrementField(wg *sync.WaitGroup, db *database.MongoSession, field string, delivery *models.Delivery) (*models.Delivery, error) {
+func (us *deliveryDao) IncrementField(db *database.MongoSession, field string, delivery *models.Delivery) (*models.Delivery, error) {
+	var wg sync.WaitGroup
 	c := make(chan *models.Delivery) // creates a new channel
 
 	wg.Add(1)
@@ -69,13 +72,15 @@ func (us *deliveryDao) IncrementField(wg *sync.WaitGroup, db *database.MongoSess
 	}()
 	delivery = <-c
 	defer close(c)
+	wg.Wait()
 	return delivery, nil
 }
 
 /**
  * @method CreateDailyCollection
  */
-func (us *deliveryDao) CreateDailyCollection(wg *sync.WaitGroup, db *database.MongoSession, collName string) {
+func (us *deliveryDao) CreateDailyCollection(db *database.MongoSession, collName string) {
+	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		// create unique index for zip-code field
@@ -87,4 +92,5 @@ func (us *deliveryDao) CreateDailyCollection(wg *sync.WaitGroup, db *database.Mo
 		}
 		wg.Done()
 	}()
+	wg.Wait()
 }

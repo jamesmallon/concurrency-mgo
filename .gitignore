@@ -18,3 +18,7 @@
 
 # dep's vendor folder
 vendor/
+
+# backup files
+*.bkp
+*.bkp.*
