@@ -66,8 +66,7 @@ func (ch *RedisClient) Get(key string, wg *sync.WaitGroup) string {
 	return <-wanted_objs
 }
 
-func (ch *RedisClient) Set(key string, val string, wg *sync.WaitGroup) {
-	ch.connect()
+func (ch *RedisClient) Set(key string, val string, milli int, wg *sync.WaitGroup) {
 	wg.Add(1)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
@@ -75,7 +74,7 @@ func (ch *RedisClient) Set(key string, val string, wg *sync.WaitGroup) {
 		codec.Set(&cache.Item{
 			Key:        key,
 			Object:     val,
-			Expiration: time.Minute,
+			Expiration: time.Duration(milli) * time.Millisecond,
 		})
 		wg.Done()
 	}()

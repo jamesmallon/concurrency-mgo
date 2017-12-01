@@ -6,7 +6,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"sync"
-	"userv/commons/cache"
+	//"userv/commons/cache"
 	"userv/commons/database"
 	"userv/modules/dailyDelivery/dao"
 	//"userv/modules/dailyDelivery/models"
@@ -39,10 +39,13 @@ func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request
 	fmt.Println(delivery)
 	waitGroup.Wait()
 
-	rClient := cache.ConnRedis()
-	rClient.Set("thiIsAKey", "keysValue", &waitGroup)
-	fmt.Println(rClient.Get("thiIsAKey", &waitGroup))
-	waitGroup.Wait()
+	deliveryCacheDao := dao.NewDeliveryCacheDao()
+	deliveryCacheDao.SettingKey("mingal")
+
+	//rClient := cache.ConnRedis()
+	//rClient.Set("thiIsAKey", "keysValue", 700, &waitGroup)
+	//fmt.Println(rClient.Get("thiIsAKey", &waitGroup))
+	//waitGroup.Wait()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
