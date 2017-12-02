@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
-	"sync"
-	"userv/commons/cache"
 	"userv/commons/database"
 	"userv/modules/dailyDelivery/dao"
-	//"userv/modules/dailyDelivery/models"
 )
 
 /**
@@ -32,17 +29,12 @@ func DeliveryController(mongoSession *database.MongoSession) *deliveryController
 func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	deliveryDao := dao.NewDeliveryDao()
 
-	var waitGroup sync.WaitGroup
-	delivery, _ := deliveryDao.GetDelivery(&waitGroup, uc.mSession)
-	waitGroup.Wait()
-	delivery, _ = deliveryDao.IncrementField(&waitGroup, uc.mSession, "sussDlry", delivery)
+	delivery, _ := deliveryDao.GetDelivery(uc.mSession)
+	delivery, _ = deliveryDao.IncrementField(uc.mSession, "sussDlry", delivery)
 	fmt.Println(delivery)
-	waitGroup.Wait()
 
-	rClient := cache.ConnRedis()
-	rClient.Set("thiIsAKey", "keysValue", &waitGroup)
-	fmt.Println(rClient.Get("thiIsAKey", &waitGroup))
-	waitGroup.Wait()
+	deliveryCacheDao := dao.NewDeliveryCacheDao()
+	deliveryCacheDao.SettingKey("mingal")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
