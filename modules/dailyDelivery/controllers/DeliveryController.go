@@ -35,6 +35,7 @@ func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request
 
 	deliveryCacheDao := dao.NewDeliveryCacheDao()
 	deliveryCacheDao.SettingKey("mingal")
+	fmt.Println(deliveryCacheDao.GettingKey("mingal"))
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)

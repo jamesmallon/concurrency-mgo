@@ -20,19 +20,14 @@ func NewDeliveryCacheDao() *deliveryCacheDao {
 	return &deliveryCacheDao{}
 }
 
-func (us *deliveryCacheDao) ReadingKey(key string) string {
-	//var waitGroup sync.WaitGroup
+func (us *deliveryCacheDao) GettingKey(key string) string {
 	redis := cache.ConnRedis()
-	//val := redis.Get(key, &waitGroup)
 	val := redis.Get(key)
-	//waitGroup.Wait()
 	return val
 }
 
 func (us *deliveryCacheDao) SettingKey(key string) bool {
-	//var waitGroup sync.WaitGroup
 	redis := cache.ConnRedis()
-	//redis.Set(key, "1", 10000, &waitGroup)
 	redis.Set(key, "1", 10000)
 	return true
 }
