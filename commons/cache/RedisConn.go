@@ -51,22 +51,27 @@ func (ch *RedisClient) connect() *cache.Codec {
 	return codec
 }
 
-func (ch *RedisClient) Get(key string, wg *sync.WaitGroup) string {
+func (ch *RedisClient) Get(key string) string {
+	var wg sync.WaitGroup
 	wg.Add(1)
-	wanted_objs := make(chan string)
+	c := make(chan string)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
 		codec := ch.connect()
 		var wanted string
 		if err := codec.Get(key, &wanted); err == nil {
-			wanted_objs <- wanted
+			c <- wanted
 		}
 		wg.Done()
 	}()
-	return <-wanted_objs
+	res := <-c
+	defer close(c)
+	wg.Wait()
+	return res
 }
 
-func (ch *RedisClient) Set(key string, val string, milli int, wg *sync.WaitGroup) {
+func (ch *RedisClient) Set(key string, val string, milli int) {
+	var wg sync.WaitGroup
 	wg.Add(1)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
@@ -78,4 +83,5 @@ func (ch *RedisClient) Set(key string, val string, milli int, wg *sync.WaitGroup
 		})
 		wg.Done()
 	}()
+	wg.Wait()
 }
