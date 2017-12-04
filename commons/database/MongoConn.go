@@ -15,7 +15,6 @@ import (
  * This file implements the singleton pattern to avoid the sistem to deal with more
  * than one Mongodb connection at once.
  */
-
 const (
 	MongoDBHosts = "localhost:27307"
 	AuthDatabase = "delivery"
@@ -34,12 +33,8 @@ type MongoSession struct {
 }
 
 /**
- * @method db.sessione.Clone() GetMongoSession It creates and instantiates a Mongodb connection
- * @return db.sessione.Clone()
  */
 func ConnMongo() *MongoSession {
-	//db := &MongoSession{}
-	//return db.connect()
 	return &MongoSession{}
 }
 
