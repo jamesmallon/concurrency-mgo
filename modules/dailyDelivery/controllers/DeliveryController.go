@@ -22,8 +22,11 @@ type deliveryController struct {
 /**
  *
  */
-func DeliveryController(mongoSession *database.MongoSession) *deliveryController {
-	return &deliveryController{mongoSession, cache.ConnRedis()}
+//func DeliveryController(mongoSession *database.MongoSession) *deliveryController {
+//	return &deliveryController{mongoSession, cache.ConnRedis()}
+func DeliveryController() *deliveryController {
+	//return &deliveryController{mongoSession, cache.ConnRedis()}
+	return &deliveryController{database.ConnMongo(), cache.ConnRedis()}
 }
 
 /**
