@@ -1,30 +1,27 @@
 package cache
 
 import (
+	"fmt"
 	"github.com/go-redis/redis"
-	"github.com/vmihailenco/msgpack"
-
-	"github.com/go-redis/cache"
 	"sync"
-	"time"
 )
 
-var codec *cache.Codec
 var once sync.Once
 
-type RedisClient struct{}
+type RedisClient struct {
+	client *redis.Client
+}
 
 /**
  * @method db.sessione.Clone() GetMongoSession It create and instantiate a Mongodb connection
- * @return db.sessione.Clone()
  */
 func ConnRedis() *RedisClient {
 	return &RedisClient{}
 }
 
-func (ch *RedisClient) connect() *cache.Codec {
+func (ch *RedisClient) connect() *redis.Client {
 	once.Do(func() {
-		client := redis.NewClient(&redis.Options{
+		ch.client = redis.NewClient(&redis.Options{
 			Addr: "localhost:6379",
 			//PoolSize:           10,
 			//PoolTimeout:        3 * time.Second,
@@ -37,18 +34,8 @@ func (ch *RedisClient) connect() *cache.Codec {
 			//DB:       0,  // use default DB
 		})
 
-		codec = &cache.Codec{
-			Redis: client,
-
-			Marshal: func(v interface{}) ([]byte, error) {
-				return msgpack.Marshal(v)
-			},
-			Unmarshal: func(b []byte, v interface{}) error {
-				return msgpack.Unmarshal(b, v)
-			},
-		}
 	})
-	return codec
+	return ch.client
 }
 
 func (ch *RedisClient) Get(key string) string {
@@ -57,12 +44,12 @@ func (ch *RedisClient) Get(key string) string {
 	c := make(chan string)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
-		codec := ch.connect()
-		var wanted string
-		if err := codec.Get(key, &wanted); err == nil {
-			c <- wanted
+		result, err := ch.connect().Get(key).Result()
+		if err != nil {
+			fmt.Println("Error getting redis key")
 		}
-		wg.Done()
+		c <- result
+		defer wg.Done()
 	}()
 	res := <-c
 	defer close(c)
@@ -75,13 +62,11 @@ func (ch *RedisClient) Set(key string, val string, milli int) {
 	wg.Add(1)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
-		codec := ch.connect()
-		codec.Set(&cache.Item{
-			Key:        key,
-			Object:     val,
-			Expiration: time.Duration(milli) * time.Millisecond,
-		})
-		wg.Done()
+		err := ch.connect().Set(key, val, 0).Err()
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer wg.Done()
 	}()
 	wg.Wait()
 }
