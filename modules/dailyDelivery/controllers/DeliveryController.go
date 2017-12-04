@@ -36,7 +36,10 @@ func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request
 	fmt.Println(delivery)
 
 	deliveryCacheDao := dao.NewDeliveryCacheDao()
-	deliveryCacheDao.SettingKey("trust", "+1000000 4U", uc.rClient)
+	deliveryCacheDao.SettingKey("trust", "1", uc.rClient)
+	deliveryCacheDao.SettingTempKey("ghosting", "7000000 4U", uc.rClient)
+	fmt.Println(deliveryCacheDao.GettingKey("trust", uc.rClient))
+	deliveryCacheDao.IncrementingKey("trust", uc.rClient)
 	fmt.Println(deliveryCacheDao.GettingKey("trust", uc.rClient))
 
 	w.Header().Set("Content-Type", "application/json")

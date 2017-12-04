@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis"
 	"sync"
+	"time"
 )
 
 var once sync.Once
@@ -38,7 +39,7 @@ func (ch *RedisClient) connect() *redis.Client {
 	return ch.client
 }
 
-func (ch *RedisClient) Get(key string) string {
+func (ch *RedisClient) GetKey(key string) string {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	c := make(chan string)
@@ -57,7 +58,7 @@ func (ch *RedisClient) Get(key string) string {
 	return res
 }
 
-func (ch *RedisClient) Set(key string, val string, milli int) {
+func (ch *RedisClient) SetKey(key string, val string) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	// singleton is thread safe and could be used with goroutines
@@ -69,4 +70,38 @@ func (ch *RedisClient) Set(key string, val string, milli int) {
 		defer wg.Done()
 	}()
 	wg.Wait()
+}
+
+func (ch *RedisClient) SetTemporaryKey(key string, val string, milli int) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	// singleton is thread safe and could be used with goroutines
+	go func() {
+		ch.SetKey(key, val)
+		err := ch.connect().PExpire(key, time.Duration(milli)*time.Millisecond).Err()
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer wg.Done()
+	}()
+	wg.Wait()
+}
+
+func (ch *RedisClient) IncrementKey(key string) int64 {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	c := make(chan int64)
+	// singleton is thread safe and could be used with goroutines
+	go func() {
+		result, err := ch.connect().Incr(key).Result()
+		if err != nil {
+			fmt.Println(err)
+		}
+		c <- result
+		defer wg.Done()
+	}()
+	res := <-c
+	defer close(c)
+	wg.Wait()
+	return res
 }
