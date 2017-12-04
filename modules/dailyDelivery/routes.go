@@ -2,13 +2,9 @@ package dailyDelivery
 
 import (
 	"github.com/julienschmidt/httprouter"
-	//"userv/commons/cache"
-	//"userv/commons/database"
 	"userv/modules/dailyDelivery/controllers"
 )
 
-//func RouteRegister(route *httprouter.Router, mongoSession *database.MongoSession) {
-//	deliveryController := controllers.DeliveryController(mongoSession)
 func RouteRegister(route *httprouter.Router) {
 	deliveryController := controllers.DeliveryController()
 
