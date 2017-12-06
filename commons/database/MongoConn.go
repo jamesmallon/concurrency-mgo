@@ -111,3 +111,30 @@ func (db *MongoSession) GetIndexObj(indexField []string,
 	}
 	return index
 }
+
+func (db *MongoSession) CountColl(collStr string) int {
+	var wg sync.WaitGroup
+
+	type res struct {
+		Count int `json:"count" bson:"count,omitempty"`
+	}
+	c := make(chan res) // creates a new channel
+	var result res
+
+	wg.Add(1)
+	go func() {
+		defer db.GetSession().Close()
+
+		err := db.GetCollection(collStr).Pipe([]bson.M{bson.M{"$group": bson.M{"_id": "count", "count": bson.M{"$sum": 1}}}}).One(&result)
+		if err != nil {
+			fmt.Println("Collection", collStr, "does not exists or is empty:", err)
+			result.Count = 0
+		}
+		c <- result
+		defer wg.Done()
+	}()
+	result = <-c
+	defer close(c)
+	wg.Wait()
+	return result.Count
+}

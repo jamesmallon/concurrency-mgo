@@ -19,8 +19,26 @@ type deliveryDao struct {
 /**
  * @return *DeliveryDao
  */
-func NewDeliveryDao() *deliveryDao {
-	return &deliveryDao{"delivery"}
+func NewDeliveryDao(collName string) *deliveryDao {
+	return &deliveryDao{collName}
+}
+
+func (us *deliveryDao) InsertDelivery(db *database.MongoSession, delivery *models.Delivery) error {
+	var wg sync.WaitGroup
+	errChannel := make(chan error) // creates a new channel
+	var err error
+	wg.Add(1)
+	go func() {
+		err = db.GetCollection(us.coll).Insert(delivery)
+		if err != nil {
+			fmt.Println(err)
+		}
+		errChannel <- err
+		defer wg.Done()
+	}()
+	err = <-errChannel
+	wg.Wait()
+	return err
 }
 
 /*
@@ -39,7 +57,6 @@ func (us *deliveryDao) GetDelivery(db *database.MongoSession) (*models.Delivery,
 		err := db.GetCollection(us.coll).Pipe(alliggator.Piperize(jsonStr)).One(&delivery)
 		if err != nil {
 			fmt.Println("GetDelivery ERROR:", err)
-			return
 		}
 		c <- delivery
 		defer wg.Done()
@@ -65,7 +82,6 @@ func (us *deliveryDao) IncrementField(db *database.MongoSession, field string, d
 		_, err := db.GetCollection(us.coll).Find(bson.M{"_id": delivery.Id}).Apply(change, &delivery)
 		if err != nil {
 			fmt.Println("IncrementField ERROR:", err)
-			return
 		}
 		c <- delivery
 		defer wg.Done()
@@ -79,18 +95,23 @@ func (us *deliveryDao) IncrementField(db *database.MongoSession, field string, d
 /**
  * @method CreateDailyCollection
  */
-func (us *deliveryDao) CreateDailyCollection(db *database.MongoSession, collName string) {
+func (us *deliveryDao) CreateDailyCollection(db *database.MongoSession, collName string) error {
 	var wg sync.WaitGroup
+	var err error
+	errChannel := make(chan error) // creates a new channel
 	wg.Add(1)
 	go func() {
 		// create unique index for zip-code field
 		index := db.GetIndexObj([]string{"zipCode"}, true, false, false, false)
 
-		err := db.GetCollection(collName).EnsureIndex(index)
+		err = db.GetCollection(collName).EnsureIndex(index)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("CreateDailyCollections ERROR:", err)
 		}
-		wg.Done()
+		errChannel <- err
+		defer wg.Done()
 	}()
+	err = <-errChannel
 	wg.Wait()
+	return err
 }

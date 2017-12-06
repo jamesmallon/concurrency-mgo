@@ -72,6 +72,9 @@ func (ch *RedisClient) SetKey(key string, val string) {
 	wg.Wait()
 }
 
+/**
+ * @method SetTemporaryKey Sets the temporary key
+ */
 func (ch *RedisClient) SetTemporaryKey(key string, val string, milli int) {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -87,6 +90,9 @@ func (ch *RedisClient) SetTemporaryKey(key string, val string, milli int) {
 	wg.Wait()
 }
 
+/**
+ * @method IncrementKey Increments a key
+ */
 func (ch *RedisClient) IncrementKey(key string) int64 {
 	var wg sync.WaitGroup
 	wg.Add(1)
