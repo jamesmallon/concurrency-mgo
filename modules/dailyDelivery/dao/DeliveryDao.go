@@ -32,6 +32,8 @@ func (us *deliveryDao) InsertDelivery(db *database.MongoSession, delivery *model
 	errChannel := make(chan error) // creates a new channel
 	wg.Add(1)
 	go func() {
+		defer db.GetSession().Close()
+
 		errChannel <- db.GetCollection(us.coll).Insert(delivery)
 		defer wg.Done()
 	}()
@@ -100,9 +102,10 @@ func (us *deliveryDao) CreateDailyCollection(db *database.MongoSession, collName
 	errChannel := make(chan error) // creates a new channel
 	wg.Add(1)
 	go func() {
+		defer db.GetSession().Close()
+
 		// create unique index for zip-code field
 		index := db.GetIndexObj([]string{"zipCode"}, true, false, false, false)
-
 		errChannel <- db.GetCollection(collName).EnsureIndex(index)
 		defer wg.Done()
 	}()
