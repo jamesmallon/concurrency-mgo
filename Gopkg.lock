@@ -16,8 +16,8 @@
 [[projects]]
   name = "github.com/johnthegreenobrien/LogIt"
   packages = ["."]
-  revision = "f6d8567b98afa4a250c4def1802fdb7a008c5e7a"
-  version = "v1.0.1"
+  revision = "e6648b590ce0304a3680ed45ed070f58004f75a9"
+  version = "v1.0.2"
 
 [[projects]]
   name = "github.com/julienschmidt/httprouter"
@@ -34,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a0ea38c80602bbd74463cabd380d4e525fc77ddf30dde0c1460f1beef26c0517"
+  inputs-digest = "d696b1567d2d27a7b4e058d7d9547aa233359bcbf4cdd7cd48b3e70e2b684663"
   solver-name = "gps-cdcl"
   solver-version = 1

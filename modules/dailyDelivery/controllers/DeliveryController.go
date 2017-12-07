@@ -22,7 +22,7 @@ type deliveryController struct {
 	mSession  *database.MongoSession
 	rClient   *cache.RedisClient
 	dailyColl string
-	logging   *logit.SysLog
+	logit     *logit.SysLog
 }
 
 /**
@@ -39,22 +39,22 @@ func (uc *deliveryController) compareDeliveryAddress() bool {
 	resultDaily, errDaily := uc.mSession.CountColl(uc.dailyColl)
 	if errDaily != nil {
 		// login
-		uc.logging.WriteJsonLog("error",
+		uc.logit.WJsonLog("error",
 			fmt.Sprintf("%s %s %s", "An error has occurred when trying to count", uc.dailyColl, "Collection"),
-			uc.logging.GetTraceMsg())
+			uc.logit.GetTraceMsg())
 	}
 	resultAddress, errAddress := uc.mSession.CountColl("address")
 	if errAddress != nil {
 		// loggin
-		uc.logging.WriteJsonLog("error",
+		uc.logit.WJsonLog("error",
 			"An error has occurred when trying to count address Collection",
-			uc.logging.GetTraceMsg())
+			uc.logit.GetTraceMsg())
 	}
 	if resultAddress > resultDaily {
 		// loggin
-		uc.logging.WriteJsonLog("info",
+		uc.logit.WJsonLog("info",
 			"Address Collection is bigger than daily delivery Collection",
-			uc.logging.GetTraceMsg())
+			uc.logit.GetTraceMsg())
 		return false
 	}
 	return true
@@ -66,13 +66,13 @@ func (uc *deliveryController) compareDeliveryAddress() bool {
 func (uc *deliveryController) checkDeliveryCollection() bool {
 	resultDaily, _ := uc.mSession.CountColl(uc.dailyColl)
 	if resultDaily > 0 {
-		uc.logging.WriteJsonLog("info",
+		uc.logit.WJsonLog("info",
 			fmt.Sprintf("%s %s", uc.dailyColl, "Collection is has length bigger than 0"),
-			uc.logging.GetTraceMsg())
+			uc.logit.GetTraceMsg())
 		return true
 	}
-	uc.logging.WriteJsonLog("info",
-		fmt.Sprintf("%s %s", uc.dailyColl, "Collection is empty"), uc.logging.GetTraceMsg())
+	uc.logit.WJsonLog("info",
+		fmt.Sprintf("%s %s", uc.dailyColl, "Collection is empty"), uc.logit.GetTraceMsg())
 	return false
 }
 
@@ -80,19 +80,19 @@ func (uc *deliveryController) checkDeliveryCollection() bool {
  * Creates a daily delivery collection
  */
 func (uc *deliveryController) createDailyDeliveryCollection() {
-	uc.logging.WriteJsonLog("info",
+	uc.logit.WJsonLog("info",
 		fmt.Sprintf("%s %s %s", "We're going to ensure an index and the existence of the", uc.dailyColl, " Collection"),
-		uc.logging.GetTraceMsg())
+		uc.logit.GetTraceMsg())
 	deliveryDao := dao.NewDeliveryDao(uc.dailyColl)
 	err := deliveryDao.CreateDailyCollection(uc.mSession, uc.dailyColl)
 	if err != nil {
-		uc.logging.WriteJsonLog("error",
+		uc.logit.WJsonLog("error",
 			fmt.Sprintf("%s %s %s", "An error has occurred when trying to ensure", uc.dailyColl, "Collection"),
-			uc.logging.GetTraceMsg())
+			uc.logit.GetTraceMsg())
 	} else {
-		uc.logging.WriteJsonLog("info",
+		uc.logit.WJsonLog("info",
 			fmt.Sprintf("%s %s %s", "Collection", uc.dailyColl, "was successfully ensured"),
-			uc.logging.GetTraceMsg())
+			uc.logit.GetTraceMsg())
 	}
 }
 
@@ -102,13 +102,13 @@ func (uc *deliveryController) createDailyDeliveryCollection() {
 func (uc *deliveryController) importDeliveryAddress() *models.Address {
 	addressDao := dao.NewAddressDao()
 	skip, _ := uc.mSession.CountColl(uc.dailyColl)
-	uc.logging.WriteJsonLog("info",
+	uc.logit.WJsonLog("info",
 		fmt.Sprintf("%s %s %s", "We're going to import an address, skipping", skip, "docs"),
-		uc.logging.GetTraceMsg())
+		uc.logit.GetTraceMsg())
 	address, _ := addressDao.GetAddress(uc.mSession, skip)
-	uc.logging.WriteJsonLog("info",
+	uc.logit.WJsonLog("info",
 		"We're going to update the daily delivery Collection docs",
-		uc.logging.GetTraceMsg())
+		uc.logit.GetTraceMsg())
 	return address
 }
 
@@ -116,9 +116,9 @@ func (uc *deliveryController) importDeliveryAddress() *models.Address {
  * Add the new address and
  */
 func (uc *deliveryController) updateDeliveryAddresses() {
-	uc.logging.WriteJsonLog("info",
+	uc.logit.WJsonLog("info",
 		"We're going to update the daily delivery Collection docs",
-		uc.logging.GetTraceMsg())
+		uc.logit.GetTraceMsg())
 	address := uc.importDeliveryAddress()
 
 	deliveryDao := dao.NewDeliveryDao(uc.dailyColl)
@@ -141,7 +141,7 @@ func (uc *deliveryController) getDailyDelivery() *models.Delivery {
  */
 func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	uc.dailyColl = time.Now().Format("2006_01_02")
-	uc.logging = logit.NewSysLog()
+	uc.logit = logit.NewSysLog()
 
 	if uc.compareDeliveryAddress() {
 		fmt.Println(uc.getDailyDelivery())
