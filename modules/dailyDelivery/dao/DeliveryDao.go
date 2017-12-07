@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"fmt"
 	"github.com/johnthegreenobrien/Alliggator"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
@@ -31,16 +30,12 @@ type response struct {
 func (us *deliveryDao) InsertDelivery(db *database.MongoSession, delivery *models.Delivery) error {
 	var wg sync.WaitGroup
 	errChannel := make(chan error) // creates a new channel
-	var err error
 	wg.Add(1)
 	go func() {
 		errChannel <- db.GetCollection(us.coll).Insert(delivery)
-		if err != nil {
-			fmt.Println(err)
-		}
 		defer wg.Done()
 	}()
-	err = <-errChannel
+	err := <-errChannel
 	defer close(errChannel)
 	wg.Wait()
 	return err
@@ -102,7 +97,6 @@ func (us *deliveryDao) IncrementField(db *database.MongoSession, field string, d
  */
 func (us *deliveryDao) CreateDailyCollection(db *database.MongoSession, collName string) error {
 	var wg sync.WaitGroup
-	var err error
 	errChannel := make(chan error) // creates a new channel
 	wg.Add(1)
 	go func() {
@@ -110,12 +104,9 @@ func (us *deliveryDao) CreateDailyCollection(db *database.MongoSession, collName
 		index := db.GetIndexObj([]string{"zipCode"}, true, false, false, false)
 
 		errChannel <- db.GetCollection(collName).EnsureIndex(index)
-		if err != nil {
-			fmt.Println("CreateDailyCollections ERROR:", err)
-		}
 		defer wg.Done()
 	}()
-	err = <-errChannel
+	err := <-errChannel
 	defer close(errChannel)
 	wg.Wait()
 	return err

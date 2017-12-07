@@ -154,6 +154,13 @@ func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request
 		fmt.Println(uc.getDailyDelivery())
 	}
 
+	//key := "rockabay"
+	//cacheDao := dao.NewDeliveryCacheDao()
+	//cacheDao.SettingKey(key, "12387978123", uc.rClient)
+	//fmt.Println(cacheDao.GettingKey(key, uc.rClient))
+	//cacheDao.IncrementingKey(key, uc.rClient)
+	//fmt.Println(cacheDao.GettingKey(key, uc.rClient))
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 }

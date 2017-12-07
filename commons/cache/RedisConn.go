@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"fmt"
 	"github.com/go-redis/redis"
 	"sync"
 	"time"
@@ -14,10 +13,15 @@ type RedisClient struct {
 }
 
 /**
- * @method db.sessione.Clone() GetMongoSession It create and instantiate a Mongodb connection
+ *
  */
 func ConnRedis() *RedisClient {
 	return &RedisClient{}
+}
+
+type response struct {
+	result interface{}
+	err    error
 }
 
 func (ch *RedisClient) connect() *redis.Client {
@@ -39,75 +43,77 @@ func (ch *RedisClient) connect() *redis.Client {
 	return ch.client
 }
 
-func (ch *RedisClient) GetKey(key string) string {
+func (ch *RedisClient) GetKey(key string) (string, error) {
 	var wg sync.WaitGroup
 	wg.Add(1)
-	c := make(chan string)
+	respChannel := make(chan response)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
-		result, err := ch.connect().Get(key).Result()
-		if err != nil {
-			fmt.Println("Error getting redis key")
+		res, err := ch.connect().Get(key).Result()
+		respChannel <- response{
+			err:    err,
+			result: res,
 		}
-		c <- result
 		defer wg.Done()
 	}()
-	res := <-c
-	defer close(c)
+	res := <-respChannel
+	defer close(respChannel)
 	wg.Wait()
-	return res
+	return res.result.(string), res.err
 }
 
-func (ch *RedisClient) SetKey(key string, val string) {
+func (ch *RedisClient) SetKey(key string, val string) error {
 	var wg sync.WaitGroup
+	errChannel := make(chan error) // creates a new channel
 	wg.Add(1)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
-		err := ch.connect().Set(key, val, 0).Err()
-		if err != nil {
-			fmt.Println(err)
-		}
+		errChannel <- ch.connect().Set(key, val, 0).Err()
 		defer wg.Done()
 	}()
+	err := <-errChannel
+	defer close(errChannel)
 	wg.Wait()
+	return err
 }
 
 /**
  * @method SetTemporaryKey Sets the temporary key
  */
-func (ch *RedisClient) SetTemporaryKey(key string, val string, milli int) {
+func (ch *RedisClient) SetTemporaryKey(key string, val string, milli int) error {
 	var wg sync.WaitGroup
+	errChannel := make(chan error) // creates a new channel
 	wg.Add(1)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
 		ch.SetKey(key, val)
-		err := ch.connect().PExpire(key, time.Duration(milli)*time.Millisecond).Err()
-		if err != nil {
-			fmt.Println(err)
-		}
+		errChannel <- ch.connect().PExpire(key, time.Duration(milli)*time.Millisecond).Err()
 		defer wg.Done()
 	}()
+	err := <-errChannel
+	defer close(errChannel)
 	wg.Wait()
+	return err
 }
 
 /**
  * @method IncrementKey Increments a key
  */
-func (ch *RedisClient) IncrementKey(key string) int64 {
+func (ch *RedisClient) IncrementKey(key string) (int64, error) {
 	var wg sync.WaitGroup
 	wg.Add(1)
-	c := make(chan int64)
+	respChannel := make(chan response)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
 		result, err := ch.connect().Incr(key).Result()
-		if err != nil {
-			fmt.Println(err)
+		respChannel <- response{
+			result: result,
+			err:    err,
 		}
-		c <- result
 		defer wg.Done()
 	}()
-	res := <-c
-	defer close(c)
+	res := <-respChannel
+	defer close(respChannel)
 	wg.Wait()
-	return res
+	return res.result.(int64), res.err
 }

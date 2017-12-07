@@ -21,21 +21,29 @@ func NewDeliveryCacheDao() *deliveryCacheDao {
 }
 
 func (us *deliveryCacheDao) GettingKey(key string, rClient *cache.RedisClient) string {
-	val := rClient.GetKey(key)
+	val, err := rClient.GetKey(key)
+	if err != nil {
+	}
 	return val
 }
 
 func (us *deliveryCacheDao) SettingKey(key string, val string, rClient *cache.RedisClient) bool {
-	rClient.SetKey(key, val)
+	err := rClient.SetKey(key, val)
+	if err != nil {
+	}
 	return true
 }
 
 func (us *deliveryCacheDao) SettingTempKey(key string, val string, rClient *cache.RedisClient) bool {
-	rClient.SetTemporaryKey(key, val, 10000)
+	err := rClient.SetTemporaryKey(key, val, 10000)
+	if err != nil {
+	}
 	return true
 }
 
 func (us *deliveryCacheDao) IncrementingKey(key string, rClient *cache.RedisClient) bool {
-	rClient.IncrementKey(key)
+	_, err := rClient.IncrementKey(key)
+	if err != nil {
+	}
 	return true
 }
