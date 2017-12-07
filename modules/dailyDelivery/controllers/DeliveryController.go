@@ -38,14 +38,23 @@ func DeliveryController() *deliveryController {
 func (uc *deliveryController) compareDeliveryAddress() bool {
 	resultDaily, errDaily := uc.mSession.CountColl(uc.dailyColl)
 	if errDaily != nil {
-
+		// login
+		uc.logging.WriteJsonLog("error",
+			fmt.Sprintf("%s %s %s", "An error has occurred when trying to count", uc.dailyColl, "Collection"),
+			uc.logging.GetTraceMsg())
 	}
 	resultAddress, errAddress := uc.mSession.CountColl("address")
 	if errAddress != nil {
-
+		// loggin
+		uc.logging.WriteJsonLog("error",
+			"An error has occurred when trying to count address Collection",
+			uc.logging.GetTraceMsg())
 	}
 	if resultAddress > resultDaily {
-		fmt.Println("Address Collection is bigger than daily delivery Collection")
+		// loggin
+		uc.logging.WriteJsonLog("info",
+			"Address Collection is bigger than daily delivery Collection",
+			uc.logging.GetTraceMsg())
 		return false
 	}
 	return true
@@ -57,10 +66,13 @@ func (uc *deliveryController) compareDeliveryAddress() bool {
 func (uc *deliveryController) checkDeliveryCollection() bool {
 	resultDaily, _ := uc.mSession.CountColl(uc.dailyColl)
 	if resultDaily > 0 {
-		//fmt.Println("Bigger than 0")
+		uc.logging.WriteJsonLog("info",
+			fmt.Sprintf("%s %s", uc.dailyColl, "Collection is has length bigger than 0"),
+			uc.logging.GetTraceMsg())
 		return true
 	}
-	//fmt.Println("Collection", collName, "is empty")
+	uc.logging.WriteJsonLog("info",
+		fmt.Sprintf("%s %s", uc.dailyColl, "Collection is empty"), uc.logging.GetTraceMsg())
 	return false
 }
 
@@ -68,13 +80,19 @@ func (uc *deliveryController) checkDeliveryCollection() bool {
  * Creates a daily delivery collection
  */
 func (uc *deliveryController) createDailyDeliveryCollection() {
-	fmt.Println("We're going to ensure an index and the existence of the", uc.dailyColl, "Collection")
+	uc.logging.WriteJsonLog("info",
+		fmt.Sprintf("%s %s %s", "We're going to ensure an index and the existence of the", uc.dailyColl, " Collection"),
+		uc.logging.GetTraceMsg())
 	deliveryDao := dao.NewDeliveryDao(uc.dailyColl)
 	err := deliveryDao.CreateDailyCollection(uc.mSession, uc.dailyColl)
 	if err != nil {
-		fmt.Println("An error has occurred when trying to ensure", uc.dailyColl, "Collection")
+		uc.logging.WriteJsonLog("error",
+			fmt.Sprintf("%s %s %s", "An error has occurred when trying to ensure", uc.dailyColl, "Collection"),
+			uc.logging.GetTraceMsg())
 	} else {
-		fmt.Println("Collection", uc.dailyColl, " was successfully ensured")
+		uc.logging.WriteJsonLog("info",
+			fmt.Sprintf("%s %s %s", "Collection", uc.dailyColl, "was successfully ensured"),
+			uc.logging.GetTraceMsg())
 	}
 }
 
@@ -84,9 +102,13 @@ func (uc *deliveryController) createDailyDeliveryCollection() {
 func (uc *deliveryController) importDeliveryAddress() *models.Address {
 	addressDao := dao.NewAddressDao()
 	skip, _ := uc.mSession.CountColl(uc.dailyColl)
-	fmt.Println("We're going to import an address, skipping", skip, "docs")
+	uc.logging.WriteJsonLog("info",
+		fmt.Sprintf("%s %s %s", "We're going to import an address, skipping", skip, "docs"),
+		uc.logging.GetTraceMsg())
 	address, _ := addressDao.GetAddress(uc.mSession, skip)
-	fmt.Println("We're going to import", address, "to the daily delivery Collection.")
+	uc.logging.WriteJsonLog("info",
+		"We're going to update the daily delivery Collection docs",
+		uc.logging.GetTraceMsg())
 	return address
 }
 
@@ -94,8 +116,9 @@ func (uc *deliveryController) importDeliveryAddress() *models.Address {
  * Add the new address and
  */
 func (uc *deliveryController) updateDeliveryAddresses() {
-	//uc.logging.WriteLog("info", fmt.Sprintln("We're going to update the daily delivery Collection docs", uc.logging.GetTraceMsg()))
-	uc.logging.WriteJsonLog("info", fmt.Sprintln("We're going to update the daily delivery Collection docs", uc.logging.GetTraceMsg()))
+	uc.logging.WriteJsonLog("info",
+		"We're going to update the daily delivery Collection docs",
+		uc.logging.GetTraceMsg())
 	address := uc.importDeliveryAddress()
 
 	deliveryDao := dao.NewDeliveryDao(uc.dailyColl)
@@ -124,16 +147,13 @@ func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request
 		fmt.Println(uc.getDailyDelivery())
 	} else if uc.checkDeliveryCollection() {
 		uc.updateDeliveryAddresses()
-		uc.getDailyDelivery()
+		fmt.Println(uc.getDailyDelivery())
 	} else {
 		uc.createDailyDeliveryCollection()
 		uc.updateDeliveryAddresses()
-		uc.getDailyDelivery()
+		fmt.Println(uc.getDailyDelivery())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-
-	//dlryJson, _ := json.Marshal(delivery)
-	//fmt.Fprintf(w, "%s", dlryJson)
 }
