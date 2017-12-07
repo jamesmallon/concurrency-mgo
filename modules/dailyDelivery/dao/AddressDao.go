@@ -34,7 +34,7 @@ func (us *addressDao) GetAddress(db *database.MongoSession, skip int) (*models.A
 	go func() {
 		defer db.GetSession().Close()
 
-		jsonStr :=   fmt.Sprintf("%s%d%s", `[{"$project": {"_id": 0}},{"$skip": `, skip, `},{"$limit": 1}]`)
+		jsonStr := fmt.Sprintf("%s%d%s", `[{"$project": {"_id": 0}},{"$skip": `, skip, `},{"$limit": 1}]`)
 		err := db.GetCollection(us.coll).Pipe(alliggator.Piperize(jsonStr)).One(&address)
 		if err != nil {
 			fmt.Println("GetAddress ERROR:", err)

@@ -6,10 +6,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	//"sync"
+	"github.com/johnthegreenobrien/LogIt"
 	"time"
 	"userv/commons/cache"
 	"userv/commons/database"
-	"userv/commons/log"
+	//"userv/commons/log"
 	"userv/modules/dailyDelivery/dao"
 	"userv/modules/dailyDelivery/models"
 )
@@ -21,6 +22,7 @@ type deliveryController struct {
 	mSession  *database.MongoSession
 	rClient   *cache.RedisClient
 	dailyColl string
+	logging   *logit.SysLog
 }
 
 /**
@@ -34,16 +36,14 @@ func DeliveryController() *deliveryController {
  * Compare length of the daily delivery and addresses collection
  */
 func (uc *deliveryController) compareDeliveryAddress() bool {
-	resultDaily, errd := uc.mSession.CountColl(uc.dailyColl)
-	if errd != nil {
+	resultDaily, errDaily := uc.mSession.CountColl(uc.dailyColl)
+	if errDaily != nil {
 
 	}
-	resultAddress, erra := uc.mSession.CountColl("address")
-	if erra != nil {
+	resultAddress, errAddress := uc.mSession.CountColl("address")
+	if errAddress != nil {
 
 	}
-	fmt.Println(resultDaily)
-	fmt.Println(resultAddress)
 	if resultAddress > resultDaily {
 		fmt.Println("Address Collection is bigger than daily delivery Collection")
 		return false
@@ -94,7 +94,8 @@ func (uc *deliveryController) importDeliveryAddress() *models.Address {
  * Add the new address and
  */
 func (uc *deliveryController) updateDeliveryAddresses() {
-	fmt.Println("We're going to update the daily delivery Collection docs")
+	//uc.logging.WriteLog("info", fmt.Sprintln("We're going to update the daily delivery Collection docs", uc.logging.GetTraceMsg()))
+	uc.logging.WriteJsonLog("info", fmt.Sprintln("We're going to update the daily delivery Collection docs", uc.logging.GetTraceMsg()))
 	address := uc.importDeliveryAddress()
 
 	deliveryDao := dao.NewDeliveryDao(uc.dailyColl)
@@ -117,10 +118,7 @@ func (uc *deliveryController) getDailyDelivery() *models.Delivery {
  */
 func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	uc.dailyColl = time.Now().Format("2006_01_02")
-
-	logging, _ := log.NewSysLog()
-	logging.Debug()
-	fmt.Println(logging.GetTraceMsg())
+	uc.logging = logit.NewSysLog()
 
 	if uc.compareDeliveryAddress() {
 		fmt.Println(uc.getDailyDelivery())
