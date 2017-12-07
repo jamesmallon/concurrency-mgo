@@ -112,29 +112,38 @@ func (db *MongoSession) GetIndexObj(indexField []string,
 	return index
 }
 
-func (db *MongoSession) CountColl(collStr string) int {
-	var wg sync.WaitGroup
+/**
+ *
+ */
+type counter struct {
+	Count int `json:"count" bson:"count,omitempty"`
+}
 
-	type res struct {
-		Count int `json:"count" bson:"count,omitempty"`
-	}
-	c := make(chan res) // creates a new channel
-	var result res
+type response struct {
+	counter int
+	err     error
+}
+
+/**
+ *
+ */
+func (db *MongoSession) CountColl(collStr string) (int, error) {
+	var wg sync.WaitGroup
+	countChannel := make(chan response) // creates a new channel
+	var result counter
 
 	wg.Add(1)
 	go func() {
 		defer db.GetSession().Close()
 
-		err := db.GetCollection(collStr).Pipe([]bson.M{bson.M{"$group": bson.M{"_id": "count", "count": bson.M{"$sum": 1}}}}).One(&result)
-		if err != nil {
-			fmt.Println("Collection", collStr, "does not exists or is empty:", err)
-			result.Count = 0
+		countChannel <- response{
+			err:     db.GetCollection(collStr).Pipe([]bson.M{bson.M{"$group": bson.M{"_id": "count", "count": bson.M{"$sum": 1}}}}).One(&result),
+			counter: result.Count,
 		}
-		c <- result
 		defer wg.Done()
 	}()
-	result = <-c
-	defer close(c)
+	resp := <-countChannel
+	defer close(countChannel)
 	wg.Wait()
-	return result.Count
+	return resp.counter, resp.err
 }

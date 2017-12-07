@@ -9,6 +9,7 @@ import (
 	"time"
 	"userv/commons/cache"
 	"userv/commons/database"
+	"userv/commons/log"
 	"userv/modules/dailyDelivery/dao"
 	"userv/modules/dailyDelivery/models"
 )
@@ -33,9 +34,16 @@ func DeliveryController() *deliveryController {
  * Compare length of the daily delivery and addresses collection
  */
 func (uc *deliveryController) compareDeliveryAddress() bool {
-	resultDaily := uc.mSession.CountColl(uc.dailyColl)
-	resultAddress := uc.mSession.CountColl("address")
+	resultDaily, errd := uc.mSession.CountColl(uc.dailyColl)
+	if errd != nil {
 
+	}
+	resultAddress, erra := uc.mSession.CountColl("address")
+	if erra != nil {
+
+	}
+	fmt.Println(resultDaily)
+	fmt.Println(resultAddress)
 	if resultAddress > resultDaily {
 		fmt.Println("Address Collection is bigger than daily delivery Collection")
 		return false
@@ -47,7 +55,7 @@ func (uc *deliveryController) compareDeliveryAddress() bool {
  * Checks if the daily delivery collection exists
  */
 func (uc *deliveryController) checkDeliveryCollection() bool {
-	resultDaily := uc.mSession.CountColl(uc.dailyColl)
+	resultDaily, _ := uc.mSession.CountColl(uc.dailyColl)
 	if resultDaily > 0 {
 		//fmt.Println("Bigger than 0")
 		return true
@@ -60,13 +68,13 @@ func (uc *deliveryController) checkDeliveryCollection() bool {
  * Creates a daily delivery collection
  */
 func (uc *deliveryController) createDailyDeliveryCollection() {
-	fmt.Println("The", uc.dailyColl, "collection probably does not exists, we're going to ensure its existence")
+	fmt.Println("We're going to ensure an index and the existence of the", uc.dailyColl, "Collection")
 	deliveryDao := dao.NewDeliveryDao(uc.dailyColl)
 	err := deliveryDao.CreateDailyCollection(uc.mSession, uc.dailyColl)
 	if err != nil {
-		fmt.Println("An error has occurred when trying to create", uc.dailyColl, "collection")
+		fmt.Println("An error has occurred when trying to ensure", uc.dailyColl, "Collection")
 	} else {
-		fmt.Println("Collection", uc.dailyColl, " was successfully created")
+		fmt.Println("Collection", uc.dailyColl, " was successfully ensured")
 	}
 }
 
@@ -75,10 +83,10 @@ func (uc *deliveryController) createDailyDeliveryCollection() {
  */
 func (uc *deliveryController) importDeliveryAddress() *models.Address {
 	addressDao := dao.NewAddressDao()
-	skip := uc.mSession.CountColl(uc.dailyColl)
-	fmt.Println("We're going to import an address, skipping",skip,"docs")
+	skip, _ := uc.mSession.CountColl(uc.dailyColl)
+	fmt.Println("We're going to import an address, skipping", skip, "docs")
 	address, _ := addressDao.GetAddress(uc.mSession, skip)
-	fmt.Println("We're going to import",address, "to the daily delivery Collection.")
+	fmt.Println("We're going to import", address, "to the daily delivery Collection.")
 	return address
 }
 
@@ -110,23 +118,20 @@ func (uc *deliveryController) getDailyDelivery() *models.Delivery {
 func (uc *deliveryController) GetDelivery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	uc.dailyColl = time.Now().Format("2006_01_02")
 
+	logging, _ := log.NewSysLog()
+	logging.Debug()
+	fmt.Println(logging.GetTraceMsg())
+
 	if uc.compareDeliveryAddress() {
 		fmt.Println(uc.getDailyDelivery())
-	} else if !uc.checkDeliveryCollection() {
-		uc.createDailyDeliveryCollection()
+	} else if uc.checkDeliveryCollection() {
 		uc.updateDeliveryAddresses()
 		uc.getDailyDelivery()
 	} else {
+		uc.createDailyDeliveryCollection()
 		uc.updateDeliveryAddresses()
 		uc.getDailyDelivery()
 	}
-	
-	deliveryCacheDao := dao.NewDeliveryCacheDao()
-	deliveryCacheDao.SettingKey("trust", "1", uc.rClient)
-	deliveryCacheDao.SettingTempKey("ghosting", "7000000 4U", uc.rClient)
-	fmt.Println(deliveryCacheDao.GettingKey("trust", uc.rClient))
-	deliveryCacheDao.IncrementingKey("trust", uc.rClient)
-	fmt.Println(deliveryCacheDao.GettingKey("trust", uc.rClient))
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)

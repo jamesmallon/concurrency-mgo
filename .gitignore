@@ -22,3 +22,6 @@ vendor/
 # backup files
 *.bkp
 *.bkp.*
+
+# temporary blocking updates to main.go 
+#main.go
