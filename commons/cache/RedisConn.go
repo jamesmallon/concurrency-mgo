@@ -4,6 +4,7 @@ import (
 	"github.com/go-redis/redis"
 	"sync"
 	"time"
+	"userv/modules/dailyDelivery/models"
 )
 
 var once sync.Once
@@ -17,11 +18,6 @@ type RedisClient struct {
  */
 func ConnRedis() *RedisClient {
 	return &RedisClient{}
-}
-
-type response struct {
-	result interface{}
-	err    error
 }
 
 func (ch *RedisClient) connect() *redis.Client {
@@ -46,20 +42,20 @@ func (ch *RedisClient) connect() *redis.Client {
 func (ch *RedisClient) GetKey(key string) (string, error) {
 	var wg sync.WaitGroup
 	wg.Add(1)
-	respChannel := make(chan response)
+	respChannel := make(chan models.TrcReturn)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
 		res, err := ch.connect().Get(key).Result()
-		respChannel <- response{
-			err:    err,
-			result: res,
+		respChannel <- models.TrcReturn{
+			Err:    err,
+			Result: res,
 		}
 		defer wg.Done()
 	}()
 	res := <-respChannel
 	defer close(respChannel)
 	wg.Wait()
-	return res.result.(string), res.err
+	return res.Result.(string), res.Err
 }
 
 func (ch *RedisClient) SetKey(key string, val string) error {
@@ -102,18 +98,18 @@ func (ch *RedisClient) SetTemporaryKey(key string, val string, milli int) error 
 func (ch *RedisClient) IncrementKey(key string) (int64, error) {
 	var wg sync.WaitGroup
 	wg.Add(1)
-	respChannel := make(chan response)
+	respChannel := make(chan models.TrcReturn)
 	// singleton is thread safe and could be used with goroutines
 	go func() {
 		result, err := ch.connect().Incr(key).Result()
-		respChannel <- response{
-			result: result,
-			err:    err,
+		respChannel <- models.TrcReturn{
+			Result: result,
+			Err:    err,
 		}
 		defer wg.Done()
 	}()
 	res := <-respChannel
 	defer close(respChannel)
 	wg.Wait()
-	return res.result.(int64), res.err
+	return res.Result.(int64), res.Err
 }

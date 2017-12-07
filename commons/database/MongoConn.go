@@ -1,5 +1,6 @@
-// This program provides a sample application for using MongoDB with
-// the mgo driver.
+/**
+ *
+ */
 package database
 
 import (
@@ -57,7 +58,6 @@ func (db *MongoSession) connect() *MongoSession {
 		}
 
 		db.session.SetMode(mgo.Monotonic, true)
-		//db.session = db.session.Copy()
 		db.database = db.session.DB(Database)
 	})
 	return db

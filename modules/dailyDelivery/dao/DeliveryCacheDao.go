@@ -10,8 +10,7 @@ import (
 /**
  * @method deliveryCacheDao
  */
-type deliveryCacheDao struct {
-}
+type deliveryCacheDao struct{}
 
 /**
  * @return *DeliveryCacheDao
