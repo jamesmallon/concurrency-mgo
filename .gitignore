@@ -23,5 +23,8 @@ vendor/
 *.bkp
 *.bkp.*
 
+# log files
+*.log
+
 # temporary blocking updates to main.go 
 #main.go
