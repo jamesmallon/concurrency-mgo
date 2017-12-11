@@ -8,6 +8,13 @@ import (
 )
 
 func main() {
+	//redisAddr := flag.String("redis-addr", "and", "then")
+	//redisKey := flag.String("redis-key", "so", "what")
+	//flag.Parse()
+
+	//fmt.Println(*redisAddr)
+	//fmt.Println(*redisKey)
+
 	router := httprouter.New()
 
 	dailyDelivery.RouteRegister(router)
