@@ -3,13 +3,20 @@
 
 [[projects]]
   name = "github.com/go-redis/redis"
-  packages = [".","internal","internal/consistenthash","internal/hashtag","internal/pool","internal/proto"]
+  packages = [
+    ".",
+    "internal",
+    "internal/consistenthash",
+    "internal/hashtag",
+    "internal/pool",
+    "internal/proto"
+  ]
   revision = "e5e021257bfc6d5fbf0beac33e30194311fb189f"
   version = "v6.7.4"
 
 [[projects]]
   name = "github.com/jamesmallon/Alliggator"
-  packages = [".","models"]
+  packages = ["."]
   revision = "260810e79854f1dc7902103b26314e4a6e1db46a"
   version = "v1.0"
 
@@ -20,6 +27,12 @@
   version = "v1.0.2"
 
 [[projects]]
+  name = "github.com/johnthegreenobrien/Alliggator"
+  packages = ["models"]
+  revision = "260810e79854f1dc7902103b26314e4a6e1db46a"
+  version = "v1.0"
+
+[[projects]]
   name = "github.com/julienschmidt/httprouter"
   packages = ["."]
   revision = "8c199fb6259ffc1af525cc3ad52ee60ba8359669"
@@ -28,12 +41,18 @@
 [[projects]]
   branch = "v2"
   name = "gopkg.in/mgo.v2"
-  packages = [".","bson","internal/json","internal/sasl","internal/scram"]
+  packages = [
+    ".",
+    "bson",
+    "internal/json",
+    "internal/sasl",
+    "internal/scram"
+  ]
   revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d696b1567d2d27a7b4e058d7d9547aa233359bcbf4cdd7cd48b3e70e2b684663"
+  inputs-digest = "1128ffc8ccdaee2b1a83e6339309da2c30617797faaeb52953c280b861f02016"
   solver-name = "gps-cdcl"
   solver-version = 1
