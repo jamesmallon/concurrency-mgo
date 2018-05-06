@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"github.com/johnthegreenobrien/Alliggator"
+	"github.com/jamesmallon/Alliggator"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"userv/commons/database"

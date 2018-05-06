@@ -6,7 +6,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	//"sync"
-	"github.com/johnthegreenobrien/LogIt"
+	"github.com/jamesmallon/LogIt"
 	"time"
 	"userv/commons/cache"
 	"userv/commons/database"

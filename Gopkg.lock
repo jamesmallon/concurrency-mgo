@@ -8,13 +8,13 @@
   version = "v6.7.4"
 
 [[projects]]
-  name = "github.com/johnthegreenobrien/Alliggator"
+  name = "github.com/jamesmallon/Alliggator"
   packages = [".","models"]
   revision = "260810e79854f1dc7902103b26314e4a6e1db46a"
   version = "v1.0"
 
 [[projects]]
-  name = "github.com/johnthegreenobrien/LogIt"
+  name = "github.com/jamesmallon/LogIt"
   packages = ["."]
   revision = "e6648b590ce0304a3680ed45ed070f58004f75a9"
   version = "v1.0.2"

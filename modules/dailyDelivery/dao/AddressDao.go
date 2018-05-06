@@ -2,7 +2,7 @@ package dao
 
 import (
 	"fmt"
-	"github.com/johnthegreenobrien/Alliggator"
+	"github.com/jamesmallon/Alliggator"
 	"sync"
 	"userv/commons/database"
 	"userv/modules/dailyDelivery/models"
